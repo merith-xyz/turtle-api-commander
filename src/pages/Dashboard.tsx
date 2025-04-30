@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { fetchAllTurtles, setApiBaseUrl } from "@/services/turtleApi";
 import { Turtle } from "@/types/turtle";
@@ -157,8 +156,9 @@ const Dashboard = () => {
         
         {debugMode && lastResponse && (
           <DebugPanel 
-            data={lastResponse} 
-            title={`API Response (${lastResponse.timestamp})`} 
+            apiResponse={lastResponse}
+            commandResponse={null}
+            title="API Response"
           />
         )}
         

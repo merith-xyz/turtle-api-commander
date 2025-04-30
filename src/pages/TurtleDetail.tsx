@@ -12,6 +12,8 @@ import TurtleInventory from "@/components/TurtleInventory";
 import CommandPanel from "@/components/CommandPanel";
 import SettingsButton from "@/components/SettingsButton";
 import DebugPanel from "@/components/DebugPanel";
+import TurtleStatus from "@/components/TurtleStatus";
+import { isTurtleOffline } from "@/types/turtle";
 
 // Define response type to avoid repetition
 type ResponseData = {
@@ -441,7 +443,12 @@ const TurtleDetail = () => {
         ) : turtle ? (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold">Turtle {turtle.name} (#{turtle.id})</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold">Turtle {turtle.name} (#{turtle.id})</h1>
+                {isTurtleOffline(turtle) && (
+                  <Badge variant="destructive">Offline</Badge>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {isBackgroundLoading && (
                   <div className="text-xs text-muted-foreground animate-pulse">
@@ -457,6 +464,7 @@ const TurtleDetail = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {turtle.pos && <TurtlePosition position={turtle.pos} />}
               {turtle.fuel && <TurtleFuel fuel={turtle.fuel} />}
+              <TurtleStatus turtle={turtle} />
               <CommandPanel turtleId={turtle.id} onSendCommand={handleSendCommand} />
             </div>
 
