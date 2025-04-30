@@ -1,9 +1,14 @@
+
 /**
  * Utility functions for loading Minecraft textures
  */
+import { useState, useEffect } from "react";
 
 // Base URL for Minecraft assets
 const MINECRAFT_ASSETS_BASE_URL = "https://assets.mcasset.cloud/1.21.5";
+
+// Fallback render service URL - For showing 3D item models
+const MC_RENDER_API = "https://mc-heads.net/item";
 
 /**
  * Get the URL for a Minecraft resource
@@ -39,45 +44,91 @@ export const getMinecraftItemTexture = (itemName: string): string => {
 };
 
 /**
+ * Get the URL for a Minecraft 3D item model render
+ * @param itemName The full item name (can include minecraft: prefix)
+ * @returns The URL to the rendered item model
+ */
+export const getMinecraftItemModel = (itemName: string): string => {
+  // Strip the minecraft: prefix if present
+  const pureName = itemName.replace("minecraft:", "");
+  return `${MC_RENDER_API}/${pureName}`;
+};
+
+/**
  * A React hook to load a Minecraft texture with a fallback
  * @param resourceLocation The resource location to load
  * @param fallback Optional fallback URL if the texture can't be loaded
+ * @param isItem Whether this is an item (use 3D model) or block (use flat texture)
  * @returns An object with the loaded image URL and loading state
  */
 export const useMinecraftTexture = (
   resourceLocation: string, 
-  fallback: string = "/placeholder.svg"
+  fallback: string = "/placeholder.svg",
+  isItem: boolean = false
 ): { url: string; isLoading: boolean; error: boolean } => {
   const [url, setUrl] = useState<string>(fallback);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   
   useEffect(() => {
-    const textureUrl = getMinecraftResourceUrl(resourceLocation);
-    const img = new Image();
-    
-    img.onload = () => {
-      setUrl(textureUrl);
-      setIsLoading(false);
-      setError(false);
-    };
-    
-    img.onerror = () => {
+    if (!resourceLocation) {
       setUrl(fallback);
       setIsLoading(false);
-      setError(true);
-    };
+      return;
+    }
+
+    setIsLoading(true);
     
-    img.src = textureUrl;
+    // For items, try to use the 3D model rendering service
+    if (isItem) {
+      // Extract item name for the rendering service
+      const itemName = resourceLocation.split("/").pop()?.replace(".png", "") || "";
+      if (itemName) {
+        const modelUrl = getMinecraftItemModel(itemName);
+        const img = new Image();
+        
+        img.onload = () => {
+          setUrl(modelUrl);
+          setIsLoading(false);
+          setError(false);
+        };
+        
+        img.onerror = () => {
+          // If model fails, fall back to texture assets
+          tryLoadTexture();
+        };
+        
+        img.src = modelUrl;
+        return;
+      }
+    }
+    
+    // For blocks or if item model loading failed, try texture assets
+    tryLoadTexture();
+    
+    function tryLoadTexture() {
+      const textureUrl = getMinecraftResourceUrl(resourceLocation);
+      const img = new Image();
+      
+      img.onload = () => {
+        setUrl(textureUrl);
+        setIsLoading(false);
+        setError(false);
+      };
+      
+      img.onerror = () => {
+        setUrl(fallback);
+        setIsLoading(false);
+        setError(true);
+      };
+      
+      img.src = textureUrl;
+    }
     
     return () => {
-      img.onload = null;
-      img.onerror = null;
+      // Cleanup
     };
-  }, [resourceLocation, fallback]);
+  }, [resourceLocation, fallback, isItem]);
   
   return { url, isLoading, error };
 };
-
-// Forgot to import useState and useEffect
-import { useState, useEffect } from "react";

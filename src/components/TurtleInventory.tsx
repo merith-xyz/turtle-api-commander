@@ -8,14 +8,14 @@ interface TurtleInventoryProps {
   inventory: TurtleInventoryItem[];
   selectedSlot: number;
   onSelectSlot: (slot: number) => void;
-  className?: string; // Add optional className prop
+  className?: string;
 }
 
 const TurtleInventory = ({ 
   inventory, 
   selectedSlot, 
   onSelectSlot,
-  className = "" // Default to empty string
+  className = ""
 }: TurtleInventoryProps) => {
   
   return (
@@ -51,11 +51,11 @@ const TurtleInventory = ({
                       size="80%"
                       alt={simplifyName(item.name)}
                       className="object-cover"
+                      isItem={isItemByName(item.name)}
                       tooltip={
                         <div className="p-1">
                           <p className="font-semibold text-sm">{simplifyName(item.name)}</p>
                           <p className="text-xs mt-1">Count: {item.count}</p>
-                          {/* Remove the reference to item.damage which doesn't exist in the type */}
                         </div>
                       }
                     />
@@ -83,6 +83,35 @@ const simplifyName = (name: string) => {
   return name?.replace("minecraft:", "") || "Empty";
 };
 
+const isItemByName = (name: string): boolean => {
+  if (!name) return false;
+  
+  const pureName = name.replace("minecraft:", "");
+  
+  // Common items that should use 3D rendering
+  return (
+    pureName.includes("pickaxe") || 
+    pureName.includes("sword") || 
+    pureName.includes("shovel") || 
+    pureName.includes("axe") || 
+    pureName.includes("hoe") ||
+    pureName.includes("bucket") ||
+    pureName.includes("apple") ||
+    pureName.includes("ingot") ||
+    pureName.includes("diamond") ||
+    pureName.includes("emerald") ||
+    pureName.includes("coal") ||
+    pureName.includes("stick") ||
+    pureName.includes("torch") ||
+    pureName.includes("redstone") ||
+    pureName.includes("compass") ||
+    pureName.includes("map") ||
+    pureName.includes("book") ||
+    pureName.includes("bow") ||
+    pureName.includes("arrow")
+  );
+};
+
 const getResourcePath = (name: string) => {
   if (!name) return "";
   
@@ -90,7 +119,6 @@ const getResourcePath = (name: string) => {
     const pureName = name.replace("minecraft:", "");
     
     // Check if it's a block or an item based on naming patterns
-    // This is a simplified heuristic
     if (
       pureName.includes("pickaxe") || 
       pureName.includes("sword") || 

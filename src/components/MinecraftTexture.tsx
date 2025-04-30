@@ -16,6 +16,7 @@ interface MinecraftTextureProps {
   size?: number | string;
   alt?: string;
   tooltip?: string | React.ReactNode;
+  isItem?: boolean;
 }
 
 const MinecraftTexture = ({
@@ -24,9 +25,10 @@ const MinecraftTexture = ({
   className = "",
   size = 32,
   alt = "Minecraft texture",
-  tooltip
+  tooltip,
+  isItem = false
 }: MinecraftTextureProps) => {
-  const { url, isLoading, error } = useMinecraftTexture(resourceLocation, fallback);
+  const { url, isLoading, error } = useMinecraftTexture(resourceLocation, fallback, isItem);
   const [imgError, setImgError] = useState(false);
   
   const sizeStyle = typeof size === "number" ? `${size}px` : size;

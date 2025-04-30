@@ -42,6 +42,14 @@ const SightBlock = ({
     return "";
   };
 
+  // Determine if the block is likely an item rather than a block
+  const isItem = blockName?.includes("minecraft:") && 
+    (blockName.includes("_pickaxe") || 
+     blockName.includes("_sword") || 
+     blockName.includes("_axe") || 
+     blockName.includes("_shovel") || 
+     blockName.includes("_hoe"));
+
   const tooltipContent = hasData ? (
     <div className="p-1">
       <p className="font-semibold text-sm">{simpleName}</p>
@@ -68,6 +76,7 @@ const SightBlock = ({
               size="100%"
               alt={`Block ${simpleName}`}
               className="object-cover"
+              isItem={isItem}
               tooltip={tooltipContent}
             />
           </div>
