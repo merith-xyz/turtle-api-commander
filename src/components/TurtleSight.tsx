@@ -47,12 +47,12 @@ const SightBlock = ({
   );
 
   return (
-    <div className="border border-gray-500 rounded-md p-2 flex flex-col items-center gap-2 bg-gray-800">
-      <div className="flex items-center gap-1 text-xs text-gray-300">
+    <div className="border border-slate-500 rounded-sm p-2 flex flex-col items-center gap-2 bg-slate-800 shadow-lg relative clip-edge">
+      <div className="flex items-center gap-1 text-xs text-slate-300">
         <Icon className="h-4 w-4" />
         <span>{direction}</span>
       </div>
-      <div className="w-12 h-12 flex items-center justify-center bg-gray-700 rounded border border-gray-600">
+      <div className="w-12 h-12 flex items-center justify-center bg-slate-700 rounded-none border border-slate-600 clip-edge">
         {hasData ? (
           <div className="relative w-full h-full">
             <MinecraftTexture 
@@ -65,7 +65,7 @@ const SightBlock = ({
             />
           </div>
         ) : (
-          <span className="text-xs text-gray-400">Empty</span>
+          <span className="text-xs text-slate-400">Empty</span>
         )}
       </div>
     </div>
@@ -76,8 +76,8 @@ const TurtleSight = ({ sight }: TurtleSightProps) => {
   const isMobile = useIsMobile();
   
   return (
-    <Card className="bg-gray-800 border-gray-700">
-      <CardHeader className="p-2">
+    <Card className="bg-slate-800 border-slate-700 shadow-xl clip-edge">
+      <CardHeader className="p-2 border-b border-slate-700">
         <CardTitle className="text-sm flex items-center justify-center">
           <Eye className="h-4 w-4 mr-1" />
           Sight

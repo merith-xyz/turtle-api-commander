@@ -34,12 +34,12 @@ const MinecraftTexture = ({
   const imageElement = (
     <>
       {isLoading ? (
-        <Skeleton className={className} style={{ width: sizeStyle, height: sizeStyle }} />
+        <Skeleton className={`clip-edge ${className}`} style={{ width: sizeStyle, height: sizeStyle }} />
       ) : !resourceLocation ? (
         <img
           src={fallback}
           alt={alt}
-          className={className}
+          className={`clip-edge ${className}`}
           style={{
             width: sizeStyle,
             height: sizeStyle,
@@ -49,7 +49,7 @@ const MinecraftTexture = ({
         <img
           src={url}
           alt={alt}
-          className={`${className} ${error || imgError ? "opacity-50" : ""}`}
+          className={`clip-edge ${className} ${error || imgError ? "opacity-50" : ""}`}
           style={{
             width: sizeStyle,
             height: sizeStyle,
@@ -71,7 +71,7 @@ const MinecraftTexture = ({
               {imageElement}
             </div>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="clip-edge border-slate-700 bg-slate-800">
             {tooltip}
           </TooltipContent>
         </Tooltip>
