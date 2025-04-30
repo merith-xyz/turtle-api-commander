@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchTurtle, setApiBaseUrl } from "@/services/turtleApi";
-import { Turtle } from "@/types/turtle";
+import { fetchTurtle, setApiBaseUrl, sendTurtleCommand } from "@/services/turtleApi";
+import { Turtle, isTurtleOffline } from "@/types/turtle";
 import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import TurtlePosition from "@/components/TurtlePosition";
-import TurtleFuel from "@/components/TurtleFuel";
+import { Badge } from "@/components/ui/badge";
+import TurtleInfoPanel from "@/components/TurtleInfoPanel";
 import TurtleInventory from "@/components/TurtleInventory";
 import CommandPanel from "@/components/CommandPanel";
 import SettingsButton from "@/components/SettingsButton";
 import DebugPanel from "@/components/DebugPanel";
-import TurtleStatus from "@/components/TurtleStatus";
-import { isTurtleOffline } from "@/types/turtle";
+import TurtleSight from "@/components/TurtleSight";
 
 // Define response type to avoid repetition
 type ResponseData = {
@@ -265,6 +264,9 @@ const TurtleDetail = () => {
       // Mark as interacting during command send
       userInteracting.current = true;
       
+      // Record timestamp of the request
+      const timestamp = new Date().toISOString();
+      
       const url = `${apiBaseUrl}/turtle/${turtleId}`;
       let body: string;
       let headers: Record<string, string>;
@@ -321,7 +323,7 @@ const TurtleDetail = () => {
 
       const commandResponse: ResponseData = {
         data: responseData,
-        timestamp: new Date().toISOString(),
+        timestamp,
         url,
         command,
         isLuaScript,
@@ -389,7 +391,6 @@ const TurtleDetail = () => {
       setLastCommandResponse(commandErrorResponse);
 
       userInteracting.current = false;
-
       return Promise.reject(error);
     }
   };
@@ -405,11 +406,17 @@ const TurtleDetail = () => {
     fetchTurtleData(true);
   };
 
+  // Handle selecting a turtle inventory slot
+  const handleSelectSlot = (slot: number) => {
+    // Minecraft slots are 1-indexed
+    handleSendCommand(`turtle.select(${slot})`);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-gray-100">
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
-          <Link to="/" className="flex items-center gap-2 text-primary hover:underline">
+          <Link to="/" className="flex items-center gap-2 text-blue-400 hover:underline">
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Link>
@@ -418,9 +425,18 @@ const TurtleDetail = () => {
               variant="outline" 
               size="sm"
               onClick={toggleDebugMode}
-              className={debugMode ? "bg-yellow-100" : ""}
+              className={debugMode ? "bg-yellow-900 text-yellow-100" : "bg-gray-800 text-gray-200"}
             >
               {debugMode ? "Hide Debug" : "Show Debug"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManualRefresh}
+              className="bg-gray-800 text-gray-200"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${isBackgroundLoading ? "animate-spin" : ""}`} />
             </Button>
             <SettingsButton />
           </div>
@@ -436,52 +452,57 @@ const TurtleDetail = () => {
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-pulse text-primary font-medium">
+            <div className="animate-pulse text-blue-400 font-medium">
               Loading turtle data...
             </div>
           </div>
         ) : turtle ? (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
+          <>
+            <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">Turtle {turtle.name} (#{turtle.id})</h1>
+                <h1 className="text-2xl font-bold">{turtle.name} <span className="text-gray-400">#{turtle.id}</span></h1>
                 {isTurtleOffline(turtle) && (
                   <Badge variant="destructive">Offline</Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                {isBackgroundLoading && (
-                  <div className="text-xs text-muted-foreground animate-pulse">
-                    Updating...
-                  </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              {/* Left Column - Info Panel */}
+              <div className="lg:col-span-4">
+                <TurtleInfoPanel turtle={turtle} />
+              </div>
+              
+              {/* Middle Column - Sight Blocks */}
+              <div className="lg:col-span-1 flex justify-center">
+                {turtle.sight && <TurtleSight sight={turtle.sight} />}
+              </div>
+              
+              {/* Right Column - Command Panel & Inventory */}
+              <div className="lg:col-span-7 flex flex-col gap-4">
+                <CommandPanel 
+                  turtleId={turtle.id} 
+                  onSendCommand={handleSendCommand} 
+                  className="h-full"
+                />
+                
+                {turtle.inventory && (
+                  <TurtleInventory 
+                    inventory={turtle.inventory} 
+                    selectedSlot={turtle.selectedSlot} 
+                    onSelectSlot={handleSelectSlot}
+                  />
                 )}
-                <Button variant="outline" onClick={handleManualRefresh}>
-                  Refresh
-                </Button>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {turtle.pos && <TurtlePosition position={turtle.pos} />}
-              {turtle.fuel && <TurtleFuel fuel={turtle.fuel} />}
-              <TurtleStatus turtle={turtle} />
-              <CommandPanel turtleId={turtle.id} onSendCommand={handleSendCommand} />
-            </div>
-
-            {turtle.inventory && (
-              <div className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">Inventory</h2>
-                <TurtleInventory inventory={turtle.inventory} selectedSlot={turtle.selectedSlot} />
-              </div>
-            )}
-          </div>
+          </>
         ) : (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="bg-gray-800 rounded-lg shadow p-8 text-center border border-gray-700">
             <h2 className="text-xl font-semibold mb-2">Turtle Not Found</h2>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-gray-400 mb-4">
               Could not find turtle with ID {turtleId}
             </p>
-            <Button asChild>
+            <Button asChild className="bg-blue-600 hover:bg-blue-500">
               <Link to="/">Return to Dashboard</Link>
             </Button>
           </div>

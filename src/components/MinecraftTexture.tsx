@@ -1,6 +1,7 @@
 
 import { useMinecraftTexture } from "@/utils/minecraftTextures";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 interface MinecraftTextureProps {
   resourceLocation: string;
@@ -18,6 +19,7 @@ const MinecraftTexture = ({
   alt = "Minecraft texture",
 }: MinecraftTextureProps) => {
   const { url, isLoading, error } = useMinecraftTexture(resourceLocation, fallback);
+  const [imgError, setImgError] = useState(false);
   
   const sizeStyle = typeof size === "number" ? `${size}px` : size;
   
@@ -25,16 +27,32 @@ const MinecraftTexture = ({
     return <Skeleton className={className} style={{ width: sizeStyle, height: sizeStyle }} />;
   }
   
+  // If the resource location is empty, show the fallback
+  if (!resourceLocation) {
+    return (
+      <img
+        src={fallback}
+        alt={alt}
+        className={className}
+        style={{
+          width: sizeStyle,
+          height: sizeStyle,
+        }}
+      />
+    );
+  }
+  
   return (
     <img
       src={url}
       alt={alt}
-      className={`${className} ${error ? "opacity-50" : ""}`}
+      className={`${className} ${error || imgError ? "opacity-50" : ""}`}
       style={{
         width: sizeStyle,
         height: sizeStyle,
         imageRendering: "pixelated",
       }}
+      onError={() => setImgError(true)}
     />
   );
 };
