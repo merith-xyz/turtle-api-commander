@@ -113,7 +113,7 @@ const TurtleDetail = () => {
       }
     } catch (error) {
       // Capture detailed error information
-      const errorInfo: any = {};
+      let errorInfo: any = {}; // Changed from const to let
       let errorMessage = '';
       let errorData = null;
       
@@ -228,7 +228,7 @@ const TurtleDetail = () => {
       return Promise.resolve();
     } catch (error) {
       // Capture detailed error information
-      const errorInfo: any = {};
+      let errorInfo: any = {}; // Changed from const to let
       let errorMessage = '';
       let errorData = null;
       
