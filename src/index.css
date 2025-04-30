@@ -48,11 +48,16 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border selection:bg-white/10 selection:text-white;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+  }
+
+  html {
+    @apply scroll-smooth;
   }
 }
 
@@ -96,6 +101,15 @@
                       radial-gradient(#263966 0.5px, #0e1525 0.5px);
     background-size: 20px 20px;
     background-position: 0 0, 10px 10px;
+  }
+
+  /* Glass morphism utilities for dark mode */
+  .glass-morphism {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)];
+  }
+  
+  .neo-blur {
+    @apply backdrop-blur-2xl bg-black/40 border border-white/10;
   }
 }
 

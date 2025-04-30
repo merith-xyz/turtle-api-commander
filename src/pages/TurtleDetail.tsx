@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { setApiBaseUrl } from "@/services/turtleApi";
@@ -500,9 +501,9 @@ const TurtleDetail = () => {
               </div>
             ) : (
               // Desktop layout - Sight is separate
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="grid grid-cols-12 gap-4">
                 {/* Left Column - Info Panel */}
-                <div className="lg:col-span-4">
+                <div className="col-span-4">
                   <TurtleInfoPanel 
                     turtle={turtle} 
                     onSendCommand={handleSendCommand} 
@@ -510,12 +511,12 @@ const TurtleDetail = () => {
                 </div>
                 
                 {/* Middle Column - Sight Blocks */}
-                <div className="lg:col-span-1 flex justify-center">
+                <div className="col-span-1 flex justify-center items-start">
                   {turtle.sight && <TurtleSight sight={turtle.sight} />}
                 </div>
                 
                 {/* Right Column - Command Panel & Inventory */}
-                <div className="lg:col-span-7 flex flex-col gap-4">
+                <div className="col-span-7 flex flex-col gap-4">
                   <CommandPanel 
                     turtleId={turtle.id} 
                     onSendCommand={handleSendCommand}
