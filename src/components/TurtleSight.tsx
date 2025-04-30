@@ -1,13 +1,20 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TurtleSight as TurtleSightType } from "@/types/turtle";
 import { ArrowUp, ArrowDown, ArrowRight, Eye } from "lucide-react";
 import MinecraftTexture from "@/components/MinecraftTexture";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  Collapsible, 
+  CollapsibleContent, 
+  CollapsibleTrigger 
+} from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 interface TurtleSightProps {
   sight: TurtleSightType;
+  className?: string;
+  isCollapsible?: boolean;
+  defaultOpen?: boolean;
 }
 
 const SightBlock = ({ 
@@ -72,25 +79,47 @@ const SightBlock = ({
   );
 };
 
-const TurtleSight = ({ sight }: TurtleSightProps) => {
-  const isMobile = useIsMobile();
-  
+const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen = true }: TurtleSightProps) => {
+  const sightContent = (
+    <div className="flex flex-row justify-around gap-2">
+      <SightBlock direction="Up" data={sight.up} icon={ArrowUp} />
+      <SightBlock direction="Front" data={sight.front} icon={ArrowRight} />
+      <SightBlock direction="Down" data={sight.down} icon={ArrowDown} />
+    </div>
+  );
+
+  if (isCollapsible) {
+    return (
+      <Collapsible defaultOpen={defaultOpen} className={`bg-slate-800 border-slate-700 shadow-xl clip-edge ${className}`}>
+        <div className="flex items-center justify-between p-2 border-b border-slate-700">
+          <div className="flex items-center text-sm font-medium">
+            <Eye className="h-4 w-4 mr-1" />
+            Sight
+          </div>
+          <CollapsibleTrigger className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+            <ChevronDown className="h-4 w-4" />
+            <span className="sr-only">Toggle</span>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="p-2">
+          {sightContent}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  }
+
   return (
-    <Card className="bg-slate-800 border-slate-700 shadow-xl clip-edge">
-      <CardHeader className="p-2 border-b border-slate-700">
-        <CardTitle className="text-sm flex items-center justify-center">
+    <div className={`bg-slate-800 border-slate-700 shadow-xl clip-edge ${className}`}>
+      <div className="p-2 border-b border-slate-700">
+        <div className="text-sm flex items-center justify-center">
           <Eye className="h-4 w-4 mr-1" />
           Sight
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-2">
-        <div className={`flex ${isMobile ? "flex-row justify-around" : "flex-col"} gap-2`}>
-          <SightBlock direction="Up" data={sight.up} icon={ArrowUp} />
-          <SightBlock direction="Front" data={sight.front} icon={ArrowRight} />
-          <SightBlock direction="Down" data={sight.down} icon={ArrowDown} />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="p-2">
+        {sightContent}
+      </div>
+    </div>
   );
 };
 

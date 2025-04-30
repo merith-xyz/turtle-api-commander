@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchTurtle, setApiBaseUrl } from "@/services/turtleApi";
+import { setApiBaseUrl } from "@/services/turtleApi";
 import { Turtle, isTurtleOffline } from "@/types/turtle";
 import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
@@ -194,7 +193,7 @@ const TurtleDetail = () => {
           title: "Error",
           description: "Failed to fetch turtle data",
           variant: "destructive",
-          className: isMobile ? "max-w-[90vw] bottom-0 mb-16" : "",
+          className: isMobile ? "max-w-[90vw]" : "",
         });
       }
     } finally {
@@ -417,7 +416,7 @@ const TurtleDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen bg-gray-900 text-gray-100 turtle-bg-pattern">
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <Link to="/" className="flex items-center gap-2 text-blue-400 hover:underline">
@@ -429,7 +428,7 @@ const TurtleDetail = () => {
               variant="outline" 
               size="sm"
               onClick={toggleDebugMode}
-              className={debugMode ? "bg-yellow-900 text-yellow-100" : "bg-gray-800 text-gray-200"}
+              className={`clip-edge-btn ${debugMode ? "bg-yellow-900 text-yellow-100" : "bg-gray-800 text-gray-200"}`}
             >
               {debugMode ? "Hide Debug" : "Show Debug"}
             </Button>
@@ -437,7 +436,7 @@ const TurtleDetail = () => {
               variant="outline"
               size="sm"
               onClick={handleManualRefresh}
-              className="bg-gray-800 text-gray-200"
+              className="bg-gray-800 text-gray-200 clip-edge-btn"
               disabled={isLoading}
             >
               <RefreshCw className={`h-4 w-4 ${isBackgroundLoading ? "animate-spin" : ""}`} />
@@ -466,33 +465,27 @@ const TurtleDetail = () => {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold">{turtle.name} <span className="text-gray-400">#{turtle.id}</span></h1>
                 {isTurtleOffline(turtle) && (
-                  <Badge variant="destructive">Offline</Badge>
+                  <Badge variant="destructive" className="clip-edge-sm">Offline</Badge>
                 )}
               </div>
             </div>
 
             {isMobile ? (
-              // Mobile layout
+              // Mobile layout - Sight is integrated into the TurtleInfoPanel
               <div className="flex flex-col gap-4">
-                {/* Top row - Info and Sight */}
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <TurtleInfoPanel 
-                      turtle={turtle} 
-                      onSendCommand={handleSendCommand} 
-                    />
-                  </div>
-                  {turtle.sight && (
-                    <div className="flex-none">
-                      <TurtleSight sight={turtle.sight} />
-                    </div>
-                  )}
+                {/* Info Panel with integrated Sight */}
+                <div className="flex-1">
+                  <TurtleInfoPanel 
+                    turtle={turtle} 
+                    onSendCommand={handleSendCommand} 
+                  />
                 </div>
                 
                 {/* Command Panel */}
                 <CommandPanel 
                   turtleId={turtle.id} 
                   onSendCommand={handleSendCommand} 
+                  className="clip-edge"
                 />
                 
                 {/* Inventory */}
@@ -501,11 +494,12 @@ const TurtleDetail = () => {
                     inventory={turtle.inventory} 
                     selectedSlot={turtle.selectedSlot} 
                     onSelectSlot={handleSelectSlot}
+                    className="clip-edge"
                   />
                 )}
               </div>
             ) : (
-              // Desktop layout
+              // Desktop layout - Sight is separate
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 {/* Left Column - Info Panel */}
                 <div className="lg:col-span-4">
@@ -524,8 +518,8 @@ const TurtleDetail = () => {
                 <div className="lg:col-span-7 flex flex-col gap-4">
                   <CommandPanel 
                     turtleId={turtle.id} 
-                    onSendCommand={handleSendCommand} 
-                    className="h-full"
+                    onSendCommand={handleSendCommand}
+                    className="h-full clip-edge" 
                   />
                   
                   {turtle.inventory && (
@@ -533,6 +527,7 @@ const TurtleDetail = () => {
                       inventory={turtle.inventory} 
                       selectedSlot={turtle.selectedSlot} 
                       onSelectSlot={handleSelectSlot}
+                      className="clip-edge"
                     />
                   )}
                 </div>
@@ -540,12 +535,12 @@ const TurtleDetail = () => {
             )}
           </>
         ) : (
-          <div className="bg-gray-800 rounded-lg shadow p-8 text-center border border-gray-700">
+          <div className="bg-gray-800 rounded-lg shadow p-8 text-center border border-gray-700 clip-edge">
             <h2 className="text-xl font-semibold mb-2">Turtle Not Found</h2>
             <p className="text-gray-400 mb-4">
               Could not find turtle with ID {turtleId}
             </p>
-            <Button asChild className="bg-blue-600 hover:bg-blue-500">
+            <Button asChild className="bg-blue-600 hover:bg-blue-500 clip-edge-btn">
               <Link to="/">Return to Dashboard</Link>
             </Button>
           </div>

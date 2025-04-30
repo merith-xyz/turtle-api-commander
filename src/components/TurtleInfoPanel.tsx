@@ -1,15 +1,16 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Turtle, isTurtleOffline } from "@/types/turtle";
+import { Card, CardContent } from "@/components/ui/card";
+import { Turtle, isTurtleOffline, TurtleSight as TurtleSightType } from "@/types/turtle";
 import { Badge } from "@/components/ui/badge";
-import { Terminal, Clock, Battery, Info, Plus } from "lucide-react";
+import { Terminal, Clock, Battery, Info, Plus, ChevronDown } from "lucide-react";
 import { formatRelative } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
+import TurtleSight from "@/components/TurtleSight";
 import {
   Form,
   FormControl,
@@ -19,6 +20,12 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface TurtleInfoPanelProps {
   turtle: Turtle;
@@ -132,188 +139,240 @@ const TurtleInfoPanel = ({ turtle, onSendCommand }: TurtleInfoPanelProps) => {
   };
   
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between text-lg">
-          <div className="flex items-center gap-2">
-            <Info className="h-5 w-5" />
-            <span>Turtle Info</span>
-          </div>
-          <Badge 
-            variant={isOffline ? "destructive" : "outline"} 
-            className={isOffline ? "bg-red-500" : ""}
-          >
-            {isOffline ? "Offline" : "Online"}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Fuel Status Section */}
-        <div className="space-y-2 border-b pb-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Battery className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Fuel Status</span>
-            </div>
-            <span className={`text-xs font-medium ${statusColor}`}>
-              {fuelStatus}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-xs">
-            <span>
-              {turtle.fuel ? `${turtle.fuel.current} / ${turtle.fuel.max}` : "N/A"}
-            </span>
-            <span className="text-muted-foreground">
-              {fuelPercentage.toFixed(1)}% remaining
-            </span>
-          </div>
-          <Progress value={fuelPercentage} className="h-2" />
+    <Card className="h-full clip-edge">
+      {/* Header with Title and Status Badge */}
+      <div className="flex items-center justify-between p-4 border-b border-slate-700">
+        <div className="flex items-center gap-2">
+          <Info className="h-5 w-5" />
+          <span className="font-semibold">Turtle Info</span>
         </div>
+        <Badge 
+          variant={isOffline ? "destructive" : "outline"} 
+          className={`${isOffline ? "bg-red-500" : ""} clip-edge`}
+        >
+          {isOffline ? "Offline" : "Online"}
+        </Badge>
+      </div>
 
-        {/* Last Seen Section */}
-        <div className="space-y-1 border-b pb-4">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Last seen</span>
-          </div>
-          <p className="text-sm">{lastSeen}</p>
-        </div>
-
-        {/* Command Result Section */}
-        <div className="space-y-1 border-b pb-4">
-          <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Last command result</span>
-          </div>
-          <div className="bg-muted p-2 rounded-md">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant={cmdSuccess ? "outline" : "destructive"} className={cmdSuccess ? "border-green-500 text-green-500" : ""}>
-                {cmdSuccess ? "Success" : "Failed"}
-              </Badge>
-            </div>
-            <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
-              {cmdResult !== null && cmdResult !== undefined
-                ? typeof cmdResult === "object"
-                  ? JSON.stringify(cmdResult, null, 2)
-                  : String(cmdResult)
-                : "No result"}
-            </pre>
-          </div>
-        </div>
-
-        {/* Command Queue Section */}
-        {turtle.cmdQueue.length > 0 && (
-          <div className="space-y-1 border-b pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Terminal className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Command queue</span>
-            </div>
-            <div className="bg-muted p-2 rounded-md max-h-32 overflow-y-auto">
-              <ul className="text-xs space-y-1">
-                {turtle.cmdQueue.map((cmd, idx) => (
-                  <li key={idx} className="font-mono">
-                    {idx + 1}. {cmd}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Add to ultron.data.misc Section */}
-        <div className="space-y-2 border-b pt-4 pb-4">
-          <div className="flex items-center gap-2">
-            <Plus className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Add Custom Data</span>
-          </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleAddMiscData)} className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={form.control}
-                  name="key"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Key</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="e.g. myData" 
-                          className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs" 
-                          {...field} 
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Type</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs">
-                            <SelectValue placeholder="Type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-gray-800 border-gray-600 text-gray-200">
-                          <SelectItem value="string">String</SelectItem>
-                          <SelectItem value="number">Number</SelectItem>
-                          <SelectItem value="table">Table (JSON)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
+      <CardContent className="p-0">
+        <Accordion type="multiple" defaultValue={["fuel", "lastSeen", "cmdResult"]} className="w-full">
+          {/* Mobile-only: Turtle Sight Section */}
+          {isMobile && turtle.sight && (
+            <AccordionItem value="sight" className="border-b border-slate-700">
+              <div className="px-4">
+                <AccordionTrigger className="py-3 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 text-muted-foreground">👁️</div>
+                    <span className="text-sm font-medium">Sight</span>
+                  </div>
+                </AccordionTrigger>
               </div>
-              <FormField
-                control={form.control}
-                name="value"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Value</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder={
-                          form.watch("type") === "string" ? "e.g. Hello World" :
-                          form.watch("type") === "number" ? "e.g. 42" :
-                          "e.g. {\"key\":\"value\"}"
-                        } 
-                        className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs" 
-                        {...field} 
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-500"
-              >
-                Add to ultron.data.misc
-              </Button>
-            </form>
-          </Form>
-        </div>
+              <AccordionContent className="pb-4 px-4">
+                <TurtleSight sight={turtle.sight as TurtleSightType} className="bg-transparent border-0 shadow-none" />
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
-        {/* Misc Data Section */}
-        {Object.keys(turtle.misc).length > 0 && (
-          <div className="space-y-1 pt-4">
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Custom data</span>
+          {/* Fuel Status Section */}
+          <AccordionItem value="fuel" className="border-b border-slate-700">
+            <div className="px-4">
+              <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Battery className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Fuel Status</span>
+                </div>
+              </AccordionTrigger>
             </div>
-            <div className="bg-muted p-2 rounded-md max-h-48 overflow-y-auto">
-              <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
-                {JSON.stringify(turtle.misc, null, 2)}
-              </pre>
+            <AccordionContent className="pb-4 px-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs">
+                    {turtle.fuel ? `${turtle.fuel.current} / ${turtle.fuel.max}` : "N/A"}
+                  </span>
+                  <span className={`text-xs font-medium ${statusColor}`}>
+                    {fuelStatus} ({fuelPercentage.toFixed(1)}%)
+                  </span>
+                </div>
+                <Progress value={fuelPercentage} className="h-2" />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Last Seen Section */}
+          <AccordionItem value="lastSeen" className="border-b border-slate-700">
+            <div className="px-4">
+              <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Last seen</span>
+                </div>
+              </AccordionTrigger>
             </div>
-          </div>
-        )}
+            <AccordionContent className="pb-4 px-4">
+              <p className="text-sm">{lastSeen}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Command Result Section */}
+          <AccordionItem value="cmdResult" className="border-b border-slate-700">
+            <div className="px-4">
+              <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Terminal className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Last command result</span>
+                </div>
+              </AccordionTrigger>
+            </div>
+            <AccordionContent className="pb-4 px-4">
+              <div className="bg-muted p-2 rounded-md clip-edge-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant={cmdSuccess ? "outline" : "destructive"} className={`${cmdSuccess ? "border-green-500 text-green-500" : ""} clip-edge-sm`}>
+                    {cmdSuccess ? "Success" : "Failed"}
+                  </Badge>
+                </div>
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
+                  {cmdResult !== null && cmdResult !== undefined
+                    ? typeof cmdResult === "object"
+                      ? JSON.stringify(cmdResult, null, 2)
+                      : String(cmdResult)
+                    : "No result"}
+                </pre>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Command Queue Section */}
+          {turtle.cmdQueue.length > 0 && (
+            <AccordionItem value="cmdQueue" className="border-b border-slate-700">
+              <div className="px-4">
+                <AccordionTrigger className="py-3 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Command queue</span>
+                  </div>
+                </AccordionTrigger>
+              </div>
+              <AccordionContent className="pb-4 px-4">
+                <div className="bg-muted p-2 rounded-md max-h-32 overflow-y-auto clip-edge-sm">
+                  <ul className="text-xs space-y-1">
+                    {turtle.cmdQueue.map((cmd, idx) => (
+                      <li key={idx} className="font-mono">
+                        {idx + 1}. {cmd}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {/* Add to ultron.data.misc Section */}
+          <AccordionItem value="addData" className="border-b border-slate-700">
+            <div className="px-4">
+              <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Plus className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Add Custom Data</span>
+                </div>
+              </AccordionTrigger>
+            </div>
+            <AccordionContent className="pb-4 px-4">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleAddMiscData)} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="key"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Key</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="e.g. myData" 
+                              className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm" 
+                              {...field} 
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Type</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm">
+                                <SelectValue placeholder="Type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gray-800 border-gray-600 text-gray-200 clip-edge">
+                              <SelectItem value="string">String</SelectItem>
+                              <SelectItem value="number">Number</SelectItem>
+                              <SelectItem value="table">Table (JSON)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="value"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Value</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder={
+                              form.watch("type") === "string" ? "e.g. Hello World" :
+                              form.watch("type") === "number" ? "e.g. 42" :
+                              "e.g. {\"key\":\"value\"}"
+                            } 
+                            className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm" 
+                            {...field} 
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button 
+                    type="submit" 
+                    className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-500 clip-edge-btn"
+                  >
+                    Add to ultron.data.misc
+                  </Button>
+                </form>
+              </Form>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Misc Data Section */}
+          {Object.keys(turtle.misc).length > 0 && (
+            <AccordionItem value="miscData" className="border-b border-slate-700">
+              <div className="px-4">
+                <AccordionTrigger className="py-3 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Custom data</span>
+                  </div>
+                </AccordionTrigger>
+              </div>
+              <AccordionContent className="pb-4 px-4">
+                <div className="bg-muted p-2 rounded-md max-h-48 overflow-y-auto clip-edge-sm">
+                  <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
+                    {JSON.stringify(turtle.misc, null, 2)}
+                  </pre>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+        </Accordion>
       </CardContent>
     </Card>
   );
