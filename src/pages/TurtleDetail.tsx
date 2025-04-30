@@ -284,7 +284,7 @@ const TurtleDetail = () => {
       const requestInfo = {
         method: "POST",
         headers,
-        body
+        body,
       };
       
       const response = await fetch(url, requestInfo);
@@ -294,7 +294,7 @@ const TurtleDetail = () => {
         const errorInfo = {
           status: response.status,
           statusText: response.statusText,
-          type: 'HttpError'
+          type: "HttpError",
         };
         
         let errorData;
@@ -308,23 +308,24 @@ const TurtleDetail = () => {
         
         throw {
           message: `HTTP error ${response.status}: ${response.statusText}`,
-          errorInfo: errorInfo,
-          data: errorData
+          errorInfo,
+          data: errorData,
         };
       }
-      
-      const responseData = await response.json();
-      
-      // Store the command response for debugging - no longer overwriting API response
+
+      // Check if the response has a body before parsing
+      const responseText = await response.text();
+      const responseData = responseText ? JSON.parse(responseText) : null;
+
       const commandResponse: ResponseData = {
         data: responseData,
         timestamp: new Date().toISOString(),
-        url: url,
-        command: command,
+        url,
+        command,
         isLuaScript,
-        requestInfo: requestInfo
+        requestInfo,
       };
-      
+
       setLastCommandResponse(commandResponse);
       
       // Fetch the latest data right after sending a command
@@ -332,63 +333,61 @@ const TurtleDetail = () => {
         fetchTurtleData(false);
         userInteracting.current = false;
       }, 500);
-      
+
       return Promise.resolve();
     } catch (error) {
-      // Capture detailed error information
-      let errorInfo: any = {}; 
-      let errorMessage = '';
+      let errorInfo: any = {};
+      let errorMessage = "";
       let errorData = null;
       
       if (error instanceof Error) {
         errorMessage = error.message;
         errorInfo.type = error.constructor.name;
         errorInfo.stack = error.stack;
-        
+
         // For network errors (like DOMException)
-        if ('code' in error) {
+        if ("code" in error) {
           errorInfo.code = (error as any).code;
         }
-      } else if (typeof error === 'object' && error !== null) {
+      } else if (typeof error === "object" && error !== null) {
         // Handle custom error objects we threw above
-        errorMessage = (error as any).message || 'Unknown error';
+        errorMessage = (error as any).message || "Unknown error";
         errorInfo = (error as any).errorInfo || {};
         errorData = (error as any).data;
       } else {
         errorMessage = String(error);
       }
-      
+
       // For fetch errors
-      if (errorMessage === 'Failed to fetch') {
-        errorInfo.type = 'NetworkError';
-        errorInfo.details = 'Connection to the server failed. The server might be down or unreachable.';
+      if (errorMessage === "Failed to fetch") {
+        errorInfo.type = "NetworkError";
+        errorInfo.details = "Connection to the server failed. The server might be down or unreachable.";
       }
-      
-      // Store the error for debugging - no longer overwriting API response
       const commandErrorResponse: ResponseData = {
         data: errorData,
         error: errorMessage,
-        errorInfo: errorInfo,
+        errorInfo,
         timestamp: new Date().toISOString(),
-        command: command,
+        command,
         isLuaScript,
         url: `${apiBaseUrl}/turtle/${turtleId}`,
         requestInfo: {
-          method: 'POST',
-          headers: isLuaScript 
-            ? { 'Content-Type': 'text/plain' }
-            : { 'Content-Type': 'application/json' },
-          body: typeof command === 'string' && !isLuaScript 
+          method: "POST",
+          headers: isLuaScript
+            ? { "Content-Type": "text/plain" }
+            : { "Content-Type": "application/json" },
+          body: typeof command === "string" && !isLuaScript
             ? JSON.stringify([command])
-            : (typeof command === 'string' ? command : JSON.stringify(command))
-        }
+            : typeof command === "string"
+            ? command
+            : JSON.stringify(command),
+        },
       };
-      
+
       setLastCommandResponse(commandErrorResponse);
-      
-      // End interaction state
+
       userInteracting.current = false;
-      
+
       return Promise.reject(error);
     }
   };
