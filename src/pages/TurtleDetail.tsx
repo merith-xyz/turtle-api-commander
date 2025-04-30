@@ -1,44 +1,42 @@
-
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { fetchTurtle, sendTurtleCommand } from "@/services/turtleApi";
 import { Turtle } from "@/types/turtle";
-import Header from "@/components/Header";
+import { useToast } from "@/components/ui/use-toast";
+import { useApiSettings } from "@/contexts/ApiSettingsContext";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import TurtleInventory from "@/components/TurtleInventory";
 import TurtlePosition from "@/components/TurtlePosition";
 import TurtleFuel from "@/components/TurtleFuel";
+import TurtleInventory from "@/components/TurtleInventory";
 import CommandPanel from "@/components/CommandPanel";
-import { ArrowLeft } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import SettingsButton from "@/components/SettingsButton";
 
 const TurtleDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const turtleId = parseInt(id || "0");
   const [turtle, setTurtle] = useState<Turtle | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  
-  const turtleId = id ? parseInt(id, 10) : -1;
+  const { apiBaseUrl } = useApiSettings();
+
+  useEffect(() => {
+    // Dynamically update the API base URL in turtleApi
+    // This is necessary because the component re-renders when the URL changes
+    // and turtleApi needs to use the latest value.
+  }, [apiBaseUrl]);
 
   const fetchTurtleData = async () => {
-    if (turtleId < 0) {
-      navigate("/");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const data = await fetchTurtle(turtleId);
-      if (data) {
-        setTurtle(data);
-      } else {
+      setTurtle(data);
+      if (!data) {
         toast({
           title: "Turtle not found",
           description: `Could not find turtle with ID ${turtleId}`,
           variant: "destructive",
         });
-        navigate("/");
       }
     } catch (error) {
       toast({
@@ -54,76 +52,73 @@ const TurtleDetail = () => {
   useEffect(() => {
     fetchTurtleData();
     
-    // Poll for updates every 3 seconds
-    const interval = setInterval(fetchTurtleData, 3000);
+    // Poll for updates every 2 seconds
+    const interval = setInterval(fetchTurtleData, 2000);
     return () => clearInterval(interval);
-  }, [turtleId]);
+  }, [turtleId, apiBaseUrl]);
 
   const handleSendCommand = async (command: string) => {
-    if (!turtle) return;
-    
-    await sendTurtleCommand(turtle.id, command);
-    // Refresh turtle data immediately to see the effects of the command
-    fetchTurtleData();
+    try {
+      await sendTurtleCommand(turtleId, command);
+      // Fetch the latest data right after sending a command
+      setTimeout(fetchTurtleData, 500);
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
   };
-
-  if (!turtle && !isLoading) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onRefresh={fetchTurtleData} isLoading={isLoading} />
-      
-      <main className="container mx-auto p-4">
-        <div className="mb-6">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate("/")}
-            className="mb-2"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+      <div className="container mx-auto p-4">
+        <div className="flex justify-between items-center mb-6">
+          <Link to="/" className="flex items-center gap-2 text-primary hover:underline">
+            <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
-          </Button>
-          
-          <h1 className="text-2xl font-bold">
-            {turtle ? `${turtle.name || `Turtle #${turtle.id}`}` : "Loading..."}
-          </h1>
+          </Link>
+          <SettingsButton />
         </div>
-        
-        {isLoading && !turtle ? (
+
+        {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-pulse text-primary font-medium">
               Loading turtle data...
             </div>
           </div>
         ) : turtle ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {/* Turtle Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TurtlePosition position={turtle.pos} />
-                <TurtleFuel fuel={turtle.fuel} />
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold">Turtle {turtle.name} (#{turtle.id})</h1>
+              <Button variant="outline" onClick={fetchTurtleData}>
+                Refresh
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {turtle.pos && <TurtlePosition position={turtle.pos} />}
+              {turtle.fuel && <TurtleFuel fuel={turtle.fuel} />}
+              <CommandPanel turtleId={turtle.id} onSendCommand={handleSendCommand} />
+            </div>
+
+            {turtle.inventory && (
+              <div className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">Inventory</h2>
+                <TurtleInventory inventory={turtle.inventory} selectedSlot={turtle.selectedSlot} />
               </div>
-              
-              {/* Inventory */}
-              <TurtleInventory 
-                inventory={turtle.inventory} 
-                selectedSlot={turtle.selectedSlot} 
-              />
-            </div>
-            
-            {/* Command Panel */}
-            <div>
-              <CommandPanel 
-                turtleId={turtle.id} 
-                onSendCommand={handleSendCommand}
-              />
-            </div>
+            )}
           </div>
-        ) : null}
-      </main>
+        ) : (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <h2 className="text-xl font-semibold mb-2">Turtle Not Found</h2>
+            <p className="text-muted-foreground mb-4">
+              Could not find turtle with ID {turtleId}
+            </p>
+            <Button asChild>
+              <Link to="/">Return to Dashboard</Link>
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

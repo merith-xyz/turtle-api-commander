@@ -1,16 +1,24 @@
 
 import { useState, useEffect } from "react";
-import { fetchAllTurtles } from "@/services/turtleApi";
+import { fetchAllTurtles, setApiBaseUrl } from "@/services/turtleApi";
 import { Turtle } from "@/types/turtle";
 import Header from "@/components/Header";
 import TurtleCard from "@/components/TurtleCard";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useApiSettings } from "@/contexts/ApiSettingsContext";
+import SettingsButton from "@/components/SettingsButton";
 
 const Dashboard = () => {
   const [turtles, setTurtles] = useState<Turtle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiSettings();
 
+  // Update API base URL whenever it changes in the context
+  useEffect(() => {
+    setApiBaseUrl(apiBaseUrl);
+  }, [apiBaseUrl]);
+  
   const fetchTurtles = async () => {
     setIsLoading(true);
     try {
@@ -39,14 +47,17 @@ const Dashboard = () => {
     // Poll for updates every 5 seconds
     const interval = setInterval(fetchTurtles, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [apiBaseUrl]); // Re-fetch when API URL changes
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header onRefresh={fetchTurtles} isLoading={isLoading} />
       
       <main className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Turtle Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Turtle Dashboard</h1>
+          <SettingsButton />
+        </div>
         
         {isLoading && turtles.length === 0 ? (
           <div className="flex justify-center items-center h-64">
@@ -64,7 +75,7 @@ const Dashboard = () => {
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <h2 className="text-xl font-semibold mb-2">No turtles found</h2>
             <p className="text-muted-foreground mb-4">
-              Make sure the turtle API server is running at localhost:3300
+              Make sure the turtle API server is running at {apiBaseUrl.replace('/api', '')}
             </p>
           </div>
         )}

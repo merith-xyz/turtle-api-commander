@@ -1,7 +1,13 @@
 
 import { Turtle } from "../types/turtle";
 
-const API_BASE_URL = "https://skynet.merith.xyz/api";
+// This will be imported dynamically in the components that use these functions
+let API_BASE_URL = "https://skynet.merith.xyz/api";
+
+// Function to update the API base URL
+export const setApiBaseUrl = (url: string) => {
+  API_BASE_URL = url;
+};
 
 export const fetchAllTurtles = async (): Promise<Turtle[]> => {
   try {
