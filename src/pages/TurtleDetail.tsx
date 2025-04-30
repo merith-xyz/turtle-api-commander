@@ -500,7 +500,7 @@ const TurtleDetail = () => {
                 )}
               </div>
             ) : (
-              // Desktop layout - Sight is separate
+              // Desktop layout - Fix the grid layout to prevent overlapping
               <div className="grid grid-cols-12 gap-4">
                 {/* Left Column - Info Panel */}
                 <div className="col-span-4">
@@ -511,8 +511,13 @@ const TurtleDetail = () => {
                 </div>
                 
                 {/* Middle Column - Sight Blocks */}
-                <div className="col-span-1 flex justify-center items-start">
-                  {turtle.sight && <TurtleSight sight={turtle.sight} />}
+                <div className="col-span-1">
+                  {turtle.sight && (
+                    <TurtleSight 
+                      sight={turtle.sight} 
+                      className="w-full"
+                    />
+                  )}
                 </div>
                 
                 {/* Right Column - Command Panel & Inventory */}
@@ -520,7 +525,7 @@ const TurtleDetail = () => {
                   <CommandPanel 
                     turtleId={turtle.id} 
                     onSendCommand={handleSendCommand}
-                    className="h-full clip-edge" 
+                    className="w-full clip-edge" 
                   />
                   
                   {turtle.inventory && (
@@ -528,7 +533,7 @@ const TurtleDetail = () => {
                       inventory={turtle.inventory} 
                       selectedSlot={turtle.selectedSlot} 
                       onSelectSlot={handleSelectSlot}
-                      className="clip-edge"
+                      className="w-full clip-edge"
                     />
                   )}
                 </div>

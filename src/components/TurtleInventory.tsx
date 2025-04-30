@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TurtleInventoryItem } from "@/types/turtle";
 import { Gamepad2 } from "lucide-react";
@@ -54,9 +55,7 @@ const TurtleInventory = ({
                         <div className="p-1">
                           <p className="font-semibold text-sm">{simplifyName(item.name)}</p>
                           <p className="text-xs mt-1">Count: {item.count}</p>
-                          {item.damage !== undefined && (
-                            <p className="text-xs">Damage: {item.damage}</p>
-                          )}
+                          {/* Remove the reference to item.damage which doesn't exist in the type */}
                         </div>
                       }
                     />
