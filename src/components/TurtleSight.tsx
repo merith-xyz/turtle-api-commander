@@ -76,17 +76,19 @@ const TurtleSight = ({ sight }: TurtleSightProps) => {
   const isMobile = useIsMobile();
   
   return (
-    <Card className={isMobile ? "w-full" : "w-20"}>
+    <Card className="bg-gray-800 border-gray-700">
       <CardHeader className="p-2">
         <CardTitle className="text-sm flex items-center justify-center">
           <Eye className="h-4 w-4 mr-1" />
           Sight
         </CardTitle>
       </CardHeader>
-      <CardContent className={isMobile ? "p-2 flex flex-row justify-around" : "p-2 flex flex-col gap-2"}>
-        <SightBlock direction="Up" data={sight.up} icon={ArrowUp} />
-        <SightBlock direction="Front" data={sight.front} icon={ArrowRight} />
-        <SightBlock direction="Down" data={sight.down} icon={ArrowDown} />
+      <CardContent className="p-2">
+        <div className={`flex ${isMobile ? "flex-row justify-around" : "flex-col"} gap-2`}>
+          <SightBlock direction="Up" data={sight.up} icon={ArrowUp} />
+          <SightBlock direction="Front" data={sight.front} icon={ArrowRight} />
+          <SightBlock direction="Down" data={sight.down} icon={ArrowDown} />
+        </div>
       </CardContent>
     </Card>
   );
