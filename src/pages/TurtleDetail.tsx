@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchTurtle, sendTurtleCommand } from "@/services/turtleApi";
+import { fetchTurtle, sendTurtleCommand, setApiBaseUrl } from "@/services/turtleApi";
 import { Turtle } from "@/types/turtle";
 import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
@@ -19,7 +19,13 @@ const TurtleDetail = () => {
   const turtleId = parseInt(id || "0");
   const [turtle, setTurtle] = useState<Turtle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastResponse, setLastResponse] = useState<{data: any, error?: string, timestamp: string, url?: string} | null>(null);
+  const [lastResponse, setLastResponse] = useState<{
+    data: any, 
+    error?: string, 
+    timestamp: string, 
+    url?: string,
+    command?: string
+  } | null>(null);
   const [debugMode, setDebugMode] = useState<boolean>(() => {
     return localStorage.getItem('debugMode') === 'true';
   });

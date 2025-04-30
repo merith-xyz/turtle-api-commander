@@ -8,11 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
 import SettingsButton from "@/components/SettingsButton";
 import DebugPanel from "@/components/DebugPanel";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const [turtles, setTurtles] = useState<Turtle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastResponse, setLastResponse] = useState<{data: any, error?: string, timestamp: string} | null>(null);
+  const [lastResponse, setLastResponse] = useState<{data: any, error?: string, timestamp: string, url?: string} | null>(null);
   const [debugMode, setDebugMode] = useState<boolean>(() => {
     return localStorage.getItem('debugMode') === 'true';
   });
