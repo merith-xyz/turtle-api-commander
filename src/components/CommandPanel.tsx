@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -46,9 +46,21 @@ const COMMON_COMMANDS = [
   "inspectDown",
 ];
 
+const DEFAULT_SCRIPT = `-- Enter Lua script here
+-- Example:
+local success, result = turtle.inspect()
+if success then
+  print(textutils.serialize(result))
+else
+  print('No block in front')
+end
+
+-- Always include a return statement
+return "Script completed"`;
+
 const CommandPanel = ({ turtleId, onSendCommand, className = "" }: CommandPanelProps) => {
   const [command, setCommand] = useState("");
-  const [luaScript, setLuaScript] = useState("");
+  const [luaScript, setLuaScript] = useState(DEFAULT_SCRIPT);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
@@ -75,6 +87,32 @@ const CommandPanel = ({ turtleId, onSendCommand, className = "" }: CommandPanelP
   
   const handleSendLuaScript = async () => {
     if (!luaScript.trim()) return;
+    
+    // Check if script contains a return statement
+    if (!luaScript.includes("return")) {
+      // Add return statement if missing
+      const scriptWithReturn = luaScript + "\n\nreturn \"Script completed without explicit return value\"";
+      setLuaScript(scriptWithReturn);
+      
+      toast({
+        title: "Return statement added",
+        description: "A return statement was automatically added to your script.",
+      });
+      
+      setIsLoading(true);
+      try {
+        await onSendCommand(scriptWithReturn, true);
+      } catch (error) {
+        toast({
+          title: "Failed to send script",
+          description: "There was an error sending the Lua script.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -172,21 +210,17 @@ const CommandPanel = ({ turtleId, onSendCommand, className = "" }: CommandPanelP
               <Textarea
                 value={luaScript}
                 onChange={(e) => setLuaScript(e.target.value)}
-                placeholder="-- Enter Lua script here
--- Example:
-local success, result = turtle.inspect()
-if success then
-  print(textutils.serialize(result))
-else
-  print('No block in front')
-end
-return 'Script completed'"
+                placeholder={DEFAULT_SCRIPT}
                 className="font-mono h-[300px] resize-none bg-gray-800 border-gray-600 text-gray-200 syntax-highlight"
                 style={{
                   lineHeight: '1.5',
                   fontFamily: 'Consolas, Monaco, "Andale Mono", monospace'
                 }}
               />
+              
+              <div className="text-xs text-gray-400 italic">
+                Your script must include a return statement to show results.
+              </div>
               
               <Button 
                 onClick={handleSendLuaScript} 

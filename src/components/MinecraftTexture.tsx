@@ -2,6 +2,12 @@
 import { useMinecraftTexture } from "@/utils/minecraftTextures";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 interface MinecraftTextureProps {
   resourceLocation: string;
@@ -9,6 +15,7 @@ interface MinecraftTextureProps {
   className?: string;
   size?: number | string;
   alt?: string;
+  tooltip?: string | React.ReactNode;
 }
 
 const MinecraftTexture = ({
@@ -17,44 +24,62 @@ const MinecraftTexture = ({
   className = "",
   size = 32,
   alt = "Minecraft texture",
+  tooltip
 }: MinecraftTextureProps) => {
   const { url, isLoading, error } = useMinecraftTexture(resourceLocation, fallback);
   const [imgError, setImgError] = useState(false);
   
   const sizeStyle = typeof size === "number" ? `${size}px` : size;
   
-  if (isLoading) {
-    return <Skeleton className={className} style={{ width: sizeStyle, height: sizeStyle }} />;
-  }
+  const imageElement = (
+    <>
+      {isLoading ? (
+        <Skeleton className={className} style={{ width: sizeStyle, height: sizeStyle }} />
+      ) : !resourceLocation ? (
+        <img
+          src={fallback}
+          alt={alt}
+          className={className}
+          style={{
+            width: sizeStyle,
+            height: sizeStyle,
+          }}
+        />
+      ) : (
+        <img
+          src={url}
+          alt={alt}
+          className={`${className} ${error || imgError ? "opacity-50" : ""}`}
+          style={{
+            width: sizeStyle,
+            height: sizeStyle,
+            imageRendering: "pixelated",
+          }}
+          onError={() => setImgError(true)}
+        />
+      )}
+    </>
+  );
   
-  // If the resource location is empty, show the fallback
-  if (!resourceLocation) {
+  // If tooltip is provided, wrap in tooltip component
+  if (tooltip) {
     return (
-      <img
-        src={fallback}
-        alt={alt}
-        className={className}
-        style={{
-          width: sizeStyle,
-          height: sizeStyle,
-        }}
-      />
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="inline-block cursor-help">
+              {imageElement}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            {tooltip}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
   
-  return (
-    <img
-      src={url}
-      alt={alt}
-      className={`${className} ${error || imgError ? "opacity-50" : ""}`}
-      style={{
-        width: sizeStyle,
-        height: sizeStyle,
-        imageRendering: "pixelated",
-      }}
-      onError={() => setImgError(true)}
-    />
-  );
+  return imageElement;
 };
 
 export default MinecraftTexture;

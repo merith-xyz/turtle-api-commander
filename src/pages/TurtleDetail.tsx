@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchTurtle, setApiBaseUrl, sendTurtleCommand } from "@/services/turtleApi";
+import { fetchTurtle, setApiBaseUrl } from "@/services/turtleApi";
 import { Turtle, isTurtleOffline } from "@/types/turtle";
 import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
@@ -13,6 +14,7 @@ import CommandPanel from "@/components/CommandPanel";
 import SettingsButton from "@/components/SettingsButton";
 import DebugPanel from "@/components/DebugPanel";
 import TurtleSight from "@/components/TurtleSight";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Define response type to avoid repetition
 type ResponseData = {
@@ -43,6 +45,7 @@ const TurtleDetail = () => {
   const [turtle, setTurtle] = useState<Turtle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
+  const isMobile = useIsMobile();
   
   // Track API and Command responses separately
   const [lastApiResponse, setLastApiResponse] = useState<ResponseData | null>(null);
@@ -191,6 +194,7 @@ const TurtleDetail = () => {
           title: "Error",
           description: "Failed to fetch turtle data",
           variant: "destructive",
+          className: isMobile ? "max-w-[90vw] bottom-0 mb-16" : "",
         });
       }
     } finally {
@@ -467,25 +471,31 @@ const TurtleDetail = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              {/* Left Column - Info Panel */}
-              <div className="lg:col-span-4">
-                <TurtleInfoPanel turtle={turtle} />
-              </div>
-              
-              {/* Middle Column - Sight Blocks */}
-              <div className="lg:col-span-1 flex justify-center">
-                {turtle.sight && <TurtleSight sight={turtle.sight} />}
-              </div>
-              
-              {/* Right Column - Command Panel & Inventory */}
-              <div className="lg:col-span-7 flex flex-col gap-4">
+            {isMobile ? (
+              // Mobile layout
+              <div className="flex flex-col gap-4">
+                {/* Top row - Info and Sight */}
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <TurtleInfoPanel 
+                      turtle={turtle} 
+                      onSendCommand={handleSendCommand} 
+                    />
+                  </div>
+                  {turtle.sight && (
+                    <div className="flex-none">
+                      <TurtleSight sight={turtle.sight} />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Command Panel */}
                 <CommandPanel 
                   turtleId={turtle.id} 
                   onSendCommand={handleSendCommand} 
-                  className="h-full"
                 />
                 
+                {/* Inventory */}
                 {turtle.inventory && (
                   <TurtleInventory 
                     inventory={turtle.inventory} 
@@ -494,7 +504,40 @@ const TurtleDetail = () => {
                   />
                 )}
               </div>
-            </div>
+            ) : (
+              // Desktop layout
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Left Column - Info Panel */}
+                <div className="lg:col-span-4">
+                  <TurtleInfoPanel 
+                    turtle={turtle} 
+                    onSendCommand={handleSendCommand} 
+                  />
+                </div>
+                
+                {/* Middle Column - Sight Blocks */}
+                <div className="lg:col-span-1 flex justify-center">
+                  {turtle.sight && <TurtleSight sight={turtle.sight} />}
+                </div>
+                
+                {/* Right Column - Command Panel & Inventory */}
+                <div className="lg:col-span-7 flex flex-col gap-4">
+                  <CommandPanel 
+                    turtleId={turtle.id} 
+                    onSendCommand={handleSendCommand} 
+                    className="h-full"
+                  />
+                  
+                  {turtle.inventory && (
+                    <TurtleInventory 
+                      inventory={turtle.inventory} 
+                      selectedSlot={turtle.selectedSlot} 
+                      onSelectSlot={handleSelectSlot}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <div className="bg-gray-800 rounded-lg shadow p-8 text-center border border-gray-700">
