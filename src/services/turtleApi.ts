@@ -35,19 +35,41 @@ export const fetchTurtle = async (id: number): Promise<Turtle | null> => {
   }
 };
 
+/**
+ * Send command(s) to a turtle
+ * @param id Turtle ID
+ * @param input Either a single command string, an array of commands, or a Lua script
+ * @param isLuaScript Set to true if input is a Lua script file
+ */
 export const sendTurtleCommand = async (
-  id: number, 
-  command: string
+  id: number,
+  input: string | string[],
+  isLuaScript: boolean = false
 ): Promise<any> => {
   try {
-    // This is a placeholder - the actual endpoint and payload structure 
-    // would depend on how the turtle API is implemented
-    const response = await fetch(`${API_BASE_URL}/turtle/${id}/command`, {
+    const url = `${API_BASE_URL}/turtle/${id}`;
+    let body: string;
+    const headers: Record<string, string> = {};
+    
+    // Determine format and set appropriate headers
+    if (Array.isArray(input)) {
+      // Array of commands as JSON
+      headers["Content-Type"] = "application/json";
+      body = JSON.stringify(input);
+    } else if (isLuaScript) {
+      // Plain text Lua file
+      headers["Content-Type"] = "text/plain";
+      body = input;
+    } else {
+      // Single command as JSON array
+      headers["Content-Type"] = "application/json";
+      body = JSON.stringify([input]);
+    }
+    
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ command }),
+      headers,
+      body,
     });
     
     if (!response.ok) {

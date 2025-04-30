@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchTurtle, sendTurtleCommand, setApiBaseUrl } from "@/services/turtleApi";
+import { fetchTurtle, setApiBaseUrl } from "@/services/turtleApi";
 import { Turtle } from "@/types/turtle";
 import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
@@ -28,7 +27,8 @@ type ResponseData = {
   },
   timestamp: string, 
   url?: string,
-  command?: string,
+  command?: string | string[],
+  isLuaScript?: boolean,
   requestInfo?: {
     method: string,
     headers?: Record<string, string>,
@@ -261,19 +261,33 @@ const TurtleDetail = () => {
     };
   }, [turtleId, apiBaseUrl]);
 
-  const handleSendCommand = async (command: string) => {
+  const handleSendCommand = async (command: string | string[], isLuaScript = false) => {
     try {
       // Mark as interacting during command send
       userInteracting.current = true;
       
-      const url = `${apiBaseUrl}/turtle/${turtleId}/command`;
-      const body = JSON.stringify({ command });
+      const url = `${apiBaseUrl}/turtle/${turtleId}`;
+      let body: string;
+      let headers: Record<string, string>;
+      
+      if (Array.isArray(command)) {
+        // Array of commands
+        headers = { "Content-Type": "application/json" };
+        body = JSON.stringify(command);
+      } else if (isLuaScript) {
+        // Lua script
+        headers = { "Content-Type": "text/plain" };
+        body = command;
+      } else {
+        // Single command as JSON array
+        headers = { "Content-Type": "application/json" };
+        body = JSON.stringify([command]);
+      }
+      
       const requestInfo = {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: body
+        headers,
+        body
       };
       
       const response = await fetch(url, requestInfo);
@@ -310,6 +324,7 @@ const TurtleDetail = () => {
         timestamp: new Date().toISOString(),
         url: url,
         command: command,
+        isLuaScript,
         requestInfo: requestInfo
       };
       
@@ -360,13 +375,16 @@ const TurtleDetail = () => {
         errorInfo: errorInfo,
         timestamp: new Date().toISOString(),
         command: command,
-        url: `${apiBaseUrl}/turtle/${turtleId}/command`,
+        isLuaScript,
+        url: `${apiBaseUrl}/turtle/${turtleId}`,
         requestInfo: {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ command })
+          headers: isLuaScript 
+            ? { 'Content-Type': 'text/plain' }
+            : { 'Content-Type': 'application/json' },
+          body: typeof command === 'string' && !isLuaScript 
+            ? JSON.stringify([command])
+            : (typeof command === 'string' ? command : JSON.stringify(command))
         }
       };
       
