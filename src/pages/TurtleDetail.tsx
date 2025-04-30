@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchTurtle, sendTurtleCommand, setApiBaseUrl } from "@/services/turtleApi";
 import { Turtle } from "@/types/turtle";
@@ -19,6 +19,7 @@ const TurtleDetail = () => {
   const turtleId = parseInt(id || "0");
   const [turtle, setTurtle] = useState<Turtle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const [lastResponse, setLastResponse] = useState<{
     data: any, 
     error?: string, 
@@ -42,6 +43,11 @@ const TurtleDetail = () => {
   const [debugMode, setDebugMode] = useState<boolean>(() => {
     return localStorage.getItem('debugMode') === 'true';
   });
+  
+  // Use a ref to track user interaction
+  const userInteracting = useRef(false);
+  const pollingTimeoutRef = useRef<number | null>(null);
+  
   const { toast } = useToast();
   const { apiBaseUrl } = useApiSettings();
 
@@ -50,8 +56,14 @@ const TurtleDetail = () => {
     setApiBaseUrl(apiBaseUrl);
   }, [apiBaseUrl]);
 
-  const fetchTurtleData = async () => {
-    setIsLoading(true);
+  const fetchTurtleData = async (isInitialLoad = false) => {
+    // Only show full loading state on initial load
+    if (isInitialLoad) {
+      setIsLoading(true);
+    } else {
+      setIsBackgroundLoading(true);
+    }
+    
     try {
       // Record timestamp of the request
       const timestamp = new Date().toISOString();
@@ -101,8 +113,13 @@ const TurtleDetail = () => {
         requestInfo: requestInfo
       });
       
-      // Update the turtle state with the data
-      setTurtle(responseData);
+      // Update the turtle state with the data, preserving the reference if data hasn't changed
+      setTurtle(prevTurtle => {
+        if (!prevTurtle || JSON.stringify(prevTurtle) !== JSON.stringify(responseData)) {
+          return responseData;
+        }
+        return prevTurtle;
+      });
       
       if (!responseData) {
         toast({
@@ -156,26 +173,85 @@ const TurtleDetail = () => {
         }
       });
       
-      toast({
-        title: "Error",
-        description: "Failed to fetch turtle data",
-        variant: "destructive",
-      });
+      // Only show toast on initial load to avoid spamming
+      if (isInitialLoad) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch turtle data",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      } else {
+        setIsBackgroundLoading(false);
+      }
+    }
+  };
+
+  // Function to schedule the next polling interval
+  const scheduleNextPoll = () => {
+    // Clear any existing timeout
+    if (pollingTimeoutRef.current !== null) {
+      clearTimeout(pollingTimeoutRef.current);
+    }
+    
+    // Only poll if the user isn't actively interacting
+    if (!userInteracting.current) {
+      pollingTimeoutRef.current = window.setTimeout(() => {
+        fetchTurtleData(false);
+        scheduleNextPoll();
+      }, 2000);
+    } else {
+      // If user is interacting, check again shortly
+      pollingTimeoutRef.current = window.setTimeout(() => {
+        scheduleNextPoll();
+      }, 500);
     }
   };
 
   useEffect(() => {
-    fetchTurtleData();
+    // Initial data fetch
+    fetchTurtleData(true);
     
-    // Poll for updates every 2 seconds
-    const interval = setInterval(fetchTurtleData, 2000);
-    return () => clearInterval(interval);
+    // Start polling
+    scheduleNextPoll();
+    
+    // Set up global interaction listeners
+    const startInteraction = () => {
+      userInteracting.current = true;
+    };
+    
+    const endInteraction = () => {
+      userInteracting.current = false;
+      // Fetch latest data when user stops interacting
+      fetchTurtleData(false);
+    };
+    
+    // Mouse and touch events for detecting interaction
+    document.addEventListener('mousedown', startInteraction);
+    document.addEventListener('touchstart', startInteraction);
+    document.addEventListener('mouseup', endInteraction);
+    document.addEventListener('touchend', endInteraction);
+    
+    // Cleanup function
+    return () => {
+      if (pollingTimeoutRef.current !== null) {
+        clearTimeout(pollingTimeoutRef.current);
+      }
+      document.removeEventListener('mousedown', startInteraction);
+      document.removeEventListener('touchstart', startInteraction);
+      document.removeEventListener('mouseup', endInteraction);
+      document.removeEventListener('touchend', endInteraction);
+    };
   }, [turtleId, apiBaseUrl]);
 
   const handleSendCommand = async (command: string) => {
     try {
+      // Mark as interacting during command send
+      userInteracting.current = true;
+      
       const url = `${apiBaseUrl}/turtle/${turtleId}/command`;
       const body = JSON.stringify({ command });
       const requestInfo = {
@@ -224,7 +300,11 @@ const TurtleDetail = () => {
       });
       
       // Fetch the latest data right after sending a command
-      setTimeout(fetchTurtleData, 500);
+      setTimeout(() => {
+        fetchTurtleData(false);
+        userInteracting.current = false;
+      }, 500);
+      
       return Promise.resolve();
     } catch (error) {
       // Capture detailed error information
@@ -273,6 +353,9 @@ const TurtleDetail = () => {
         }
       });
       
+      // End interaction state
+      userInteracting.current = false;
+      
       return Promise.reject(error);
     }
   };
@@ -281,6 +364,11 @@ const TurtleDetail = () => {
     const newMode = !debugMode;
     setDebugMode(newMode);
     localStorage.setItem('debugMode', newMode.toString());
+  };
+
+  // Function to manually refresh data
+  const handleManualRefresh = () => {
+    fetchTurtleData(true);
   };
 
   return (
@@ -323,9 +411,16 @@ const TurtleDetail = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold">Turtle {turtle.name} (#{turtle.id})</h1>
-              <Button variant="outline" onClick={fetchTurtleData}>
-                Refresh
-              </Button>
+              <div className="flex items-center gap-2">
+                {isBackgroundLoading && (
+                  <div className="text-xs text-muted-foreground animate-pulse">
+                    Updating...
+                  </div>
+                )}
+                <Button variant="outline" onClick={handleManualRefresh}>
+                  Refresh
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
