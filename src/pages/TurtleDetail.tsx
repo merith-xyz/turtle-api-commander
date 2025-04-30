@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { setApiBaseUrl } from "@/services/turtleApi";
@@ -13,7 +12,6 @@ import TurtleInventory from "@/components/TurtleInventory";
 import CommandPanel from "@/components/CommandPanel";
 import SettingsButton from "@/components/SettingsButton";
 import DebugPanel from "@/components/DebugPanel";
-import TurtleSight from "@/components/TurtleSight";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Define response type to avoid repetition
@@ -472,7 +470,7 @@ const TurtleDetail = () => {
             </div>
 
             {isMobile ? (
-              // Mobile layout - Sight is integrated into the TurtleInfoPanel
+              // Mobile layout - Single column
               <div className="flex flex-col gap-4">
                 {/* Info Panel with integrated Sight */}
                 <div className="flex-1">
@@ -500,28 +498,18 @@ const TurtleDetail = () => {
                 )}
               </div>
             ) : (
-              // Desktop layout - Fix the grid layout to prevent overlapping
-              <div className="grid grid-cols-12 gap-4">
-                {/* Left Column - Info Panel */}
-                <div className="col-span-4">
+              // Desktop layout - Now with 2 columns since sight is moved inside info panel
+              <div className="grid grid-cols-6 gap-4">
+                {/* Left Column - Info Panel (now with Sight inside) */}
+                <div className="col-span-2">
                   <TurtleInfoPanel 
                     turtle={turtle} 
                     onSendCommand={handleSendCommand} 
                   />
                 </div>
                 
-                {/* Middle Column - Sight Blocks */}
-                <div className="col-span-1">
-                  {turtle.sight && (
-                    <TurtleSight 
-                      sight={turtle.sight} 
-                      className="w-full"
-                    />
-                  )}
-                </div>
-                
                 {/* Right Column - Command Panel & Inventory */}
-                <div className="col-span-7 flex flex-col gap-4">
+                <div className="col-span-4 flex flex-col gap-4">
                   <CommandPanel 
                     turtleId={turtle.id} 
                     onSendCommand={handleSendCommand}

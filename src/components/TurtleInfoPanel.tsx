@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Turtle, isTurtleOffline, TurtleSight as TurtleSightType } from "@/types/turtle";
 import { Badge } from "@/components/ui/badge";
-import { Terminal, Clock, Battery, Info, Plus, ChevronDown } from "lucide-react";
+import { Terminal, Clock, Battery, Info, Plus, ChevronDown, Eye } from "lucide-react";
 import { formatRelative } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -155,14 +155,14 @@ const TurtleInfoPanel = ({ turtle, onSendCommand }: TurtleInfoPanelProps) => {
       </div>
 
       <CardContent className="p-0">
-        <Accordion type="multiple" defaultValue={["fuel", "lastSeen", "cmdResult"]} className="w-full">
-          {/* Mobile-only: Turtle Sight Section */}
-          {isMobile && turtle.sight && (
+        <Accordion type="multiple" defaultValue={["sight", "fuel", "lastSeen", "cmdResult"]} className="w-full">
+          {/* Turtle Sight Section - Now always visible for both mobile and desktop */}
+          {turtle.sight && (
             <AccordionItem value="sight" className="border-b border-slate-700">
               <div className="px-4">
                 <AccordionTrigger className="py-3 hover:no-underline">
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 text-muted-foreground">👁️</div>
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Sight</span>
                   </div>
                 </AccordionTrigger>
