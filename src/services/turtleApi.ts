@@ -1,7 +1,7 @@
 
 import { Turtle } from "../types/turtle";
 
-const API_BASE_URL = "http://localhost:3300/api";
+const API_BASE_URL = "https://skynet.merith.xyz/api";
 
 export const fetchAllTurtles = async (): Promise<Turtle[]> => {
   try {

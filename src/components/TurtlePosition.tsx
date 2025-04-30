@@ -1,10 +1,10 @@
 
-import { TurtlePosition } from "@/types/turtle";
+import { type TurtlePosition as TurtlePositionType } from "@/types/turtle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from "lucide-react";
 
 interface TurtlePositionProps {
-  position: TurtlePosition;
+  position: TurtlePositionType;
 }
 
 const TurtlePosition = ({ position }: TurtlePositionProps) => {

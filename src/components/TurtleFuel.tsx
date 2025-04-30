@@ -1,11 +1,11 @@
 
-import { TurtleFuel } from "@/types/turtle";
+import { type TurtleFuel as TurtleFuelType } from "@/types/turtle";
 import { Battery } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 interface TurtleFuelProps {
-  fuel: TurtleFuel;
+  fuel: TurtleFuelType;
 }
 
 const TurtleFuel = ({ fuel }: TurtleFuelProps) => {
