@@ -43,10 +43,9 @@ const TurtleDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   
-  // Split debug responses into API and Command responses
+  // Track API and Command responses separately
   const [lastApiResponse, setLastApiResponse] = useState<ResponseData | null>(null);
   const [lastCommandResponse, setLastCommandResponse] = useState<ResponseData | null>(null);
-  const [activeDebugResponse, setActiveDebugResponse] = useState<ResponseData | null>(null);
   
   const [debugMode, setDebugMode] = useState<boolean>(() => {
     return localStorage.getItem('debugMode') === 'true';
@@ -122,7 +121,6 @@ const TurtleDetail = () => {
       };
       
       setLastApiResponse(apiResponse);
-      setActiveDebugResponse(apiResponse);
       
       // Update the turtle state with the data, preserving the reference if data hasn't changed
       setTurtle(prevTurtle => {
@@ -185,7 +183,6 @@ const TurtleDetail = () => {
       };
       
       setLastApiResponse(apiErrorResponse);
-      setActiveDebugResponse(apiErrorResponse);
       
       // Only show toast on initial load to avoid spamming
       if (isInitialLoad) {
@@ -318,7 +315,7 @@ const TurtleDetail = () => {
       
       const responseData = await response.json();
       
-      // Store the command response for debugging
+      // Store the command response for debugging - no longer overwriting API response
       const commandResponse: ResponseData = {
         data: responseData,
         timestamp: new Date().toISOString(),
@@ -329,7 +326,6 @@ const TurtleDetail = () => {
       };
       
       setLastCommandResponse(commandResponse);
-      setActiveDebugResponse(commandResponse);
       
       // Fetch the latest data right after sending a command
       setTimeout(() => {
@@ -368,7 +364,7 @@ const TurtleDetail = () => {
         errorInfo.details = 'Connection to the server failed. The server might be down or unreachable.';
       }
       
-      // Store the error for debugging
+      // Store the error for debugging - no longer overwriting API response
       const commandErrorResponse: ResponseData = {
         data: errorData,
         error: errorMessage,
@@ -389,7 +385,6 @@ const TurtleDetail = () => {
       };
       
       setLastCommandResponse(commandErrorResponse);
-      setActiveDebugResponse(commandErrorResponse);
       
       // End interaction state
       userInteracting.current = false;
@@ -432,10 +427,9 @@ const TurtleDetail = () => {
 
         {debugMode && (
           <DebugPanel 
-            data={activeDebugResponse || (lastCommandResponse || lastApiResponse)} 
-            title={lastCommandResponse 
-              ? `Command Response (${lastCommandResponse.timestamp})` 
-              : `API Response (${lastApiResponse?.timestamp || ""})`} 
+            apiResponse={lastApiResponse}
+            commandResponse={lastCommandResponse}
+            title="Debug Information"
           />
         )}
 

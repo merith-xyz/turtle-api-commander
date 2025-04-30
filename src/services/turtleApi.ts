@@ -46,39 +46,35 @@ export const sendTurtleCommand = async (
   input: string | string[],
   isLuaScript: boolean = false
 ): Promise<any> => {
-  try {
-    const url = `${API_BASE_URL}/turtle/${id}`;
-    let body: string;
-    const headers: Record<string, string> = {};
-    
-    // Determine format and set appropriate headers
-    if (Array.isArray(input)) {
-      // Array of commands as JSON
-      headers["Content-Type"] = "application/json";
-      body = JSON.stringify(input);
-    } else if (isLuaScript) {
-      // Plain text Lua file
-      headers["Content-Type"] = "text/plain";
-      body = input;
-    } else {
-      // Single command as JSON array
-      headers["Content-Type"] = "application/json";
-      body = JSON.stringify([input]);
-    }
-    
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body,
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Failed to send command to turtle ${id}:`, error);
-    return null;
+  const url = `${API_BASE_URL}/turtle/${id}`;
+  let body: string;
+  const headers: Record<string, string> = {};
+  
+  // Determine format and set appropriate headers
+  if (Array.isArray(input)) {
+    // Array of commands as JSON
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(input);
+  } else if (isLuaScript) {
+    // Plain text Lua file
+    headers["Content-Type"] = "text/plain";
+    body = input;
+  } else {
+    // Single command as JSON array
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify([input]);
   }
+  
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body,
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API error (${response.status}): ${errorText}`);
+  }
+  
+  return await response.json();
 };

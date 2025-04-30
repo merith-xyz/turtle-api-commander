@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,37 +9,32 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DebugPanelProps {
-  data: any;
+  apiResponse: any;
+  commandResponse: any;
   title?: string;
 }
 
-const DebugPanel = ({ data, title = "Debug Data" }: DebugPanelProps) => {
-  const [isLeftExpanded, setIsLeftExpanded] = useState(false);
-  const [isRightExpanded, setIsRightExpanded] = useState(false);
-  const hasError = data?.error;
-
-  // Determine if this is a sent command or received response
-  const isSentCommand = Boolean(data?.command);
+const DebugPanel = ({ apiResponse, commandResponse, title = "Debug Data" }: DebugPanelProps) => {
+  const [isApiExpanded, setIsApiExpanded] = useState(false);
+  const [isCommandExpanded, setIsCommandExpanded] = useState(false);
   
-  // Initialize with last response for both views - we'll split the UI but keep a single data source
-  const sentData = isSentCommand ? data : null;
-  const receivedData = isSentCommand ? null : data;
+  const apiHasError = apiResponse?.error;
+  const commandHasError = commandResponse?.error;
 
-  // Use the most recent data for display (either sent or received)
-  const displayData = data;
-
-  const toggleLeftExpand = () => {
-    setIsLeftExpanded(!isLeftExpanded);
+  const toggleApiExpand = () => {
+    setIsApiExpanded(!isApiExpanded);
   };
 
-  const toggleRightExpand = () => {
-    setIsRightExpanded(!isRightExpanded);
+  const toggleCommandExpand = () => {
+    setIsCommandExpanded(!isCommandExpanded);
   };
 
-  const renderDataContent = (data: any, isExpanded: boolean, toggleExpand: () => void, title: string) => {
-    if (!data) return null;
-    
-    const hasError = data?.error;
+  const renderDataContent = (data: any, isExpanded: boolean, toggleExpand: () => void, title: string, hasError: boolean) => {
+    if (!data) return (
+      <Card className="overflow-hidden h-full p-4">
+        <div className="text-center text-muted-foreground">No data available</div>
+      </Card>
+    );
     
     return (
       <Card className="overflow-hidden h-full">
@@ -129,19 +125,15 @@ ${data.errorInfo.stack ? '\nStack Trace:\n' + data.errorInfo.stack : ''}`}
     );
   };
 
-  // If there's no data to display in either panel, show a simplified view
-  if (!sentData && !receivedData) {
-    return renderDataContent(displayData, isLeftExpanded, toggleLeftExpand, title);
-  }
-
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[200px] mb-4">
       <ResizablePanel defaultSize={50} minSize={30}>
         {renderDataContent(
-          receivedData || displayData, 
-          isLeftExpanded, 
-          toggleLeftExpand, 
-          receivedData ? `API Response (${receivedData.timestamp})` : "API Responses"
+          apiResponse,
+          isApiExpanded,
+          toggleApiExpand,
+          `API Response ${apiResponse ? `(${apiResponse.timestamp})` : ""}`,
+          apiHasError
         )}
       </ResizablePanel>
       
@@ -149,10 +141,11 @@ ${data.errorInfo.stack ? '\nStack Trace:\n' + data.errorInfo.stack : ''}`}
       
       <ResizablePanel defaultSize={50} minSize={30}>
         {renderDataContent(
-          sentData, 
-          isRightExpanded, 
-          toggleRightExpand, 
-          sentData ? `Command Response (${sentData.timestamp})` : "Command Responses"
+          commandResponse,
+          isCommandExpanded,
+          toggleCommandExpand,
+          `Command Response ${commandResponse ? `(${commandResponse.timestamp})` : ""}`,
+          commandHasError
         )}
       </ResizablePanel>
     </ResizablePanelGroup>
