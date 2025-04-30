@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchTurtle, sendTurtleCommand } from "@/services/turtleApi";
 import { Turtle } from "@/types/turtle";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,27 +12,47 @@ import TurtleFuel from "@/components/TurtleFuel";
 import TurtleInventory from "@/components/TurtleInventory";
 import CommandPanel from "@/components/CommandPanel";
 import SettingsButton from "@/components/SettingsButton";
+import DebugPanel from "@/components/DebugPanel";
 
 const TurtleDetail = () => {
   const { id } = useParams<{ id: string }>();
   const turtleId = parseInt(id || "0");
   const [turtle, setTurtle] = useState<Turtle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastResponse, setLastResponse] = useState<{data: any, error?: string, timestamp: string, url?: string} | null>(null);
+  const [debugMode, setDebugMode] = useState<boolean>(() => {
+    return localStorage.getItem('debugMode') === 'true';
+  });
   const { toast } = useToast();
   const { apiBaseUrl } = useApiSettings();
 
   useEffect(() => {
     // Dynamically update the API base URL in turtleApi
-    // This is necessary because the component re-renders when the URL changes
-    // and turtleApi needs to use the latest value.
+    setApiBaseUrl(apiBaseUrl);
   }, [apiBaseUrl]);
 
   const fetchTurtleData = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchTurtle(turtleId);
-      setTurtle(data);
-      if (!data) {
+      // Record timestamp of the request
+      const timestamp = new Date().toISOString();
+      
+      // Making the API call
+      const url = `${apiBaseUrl}/turtle/${turtleId}`;
+      const response = await fetch(url);
+      const responseData = await response.json();
+      
+      // Store the full response for debugging
+      setLastResponse({
+        data: responseData,
+        timestamp: timestamp,
+        url: url
+      });
+      
+      // Update the turtle state with the data
+      setTurtle(responseData);
+      
+      if (!responseData) {
         toast({
           title: "Turtle not found",
           description: `Could not find turtle with ID ${turtleId}`,
@@ -39,6 +60,13 @@ const TurtleDetail = () => {
         });
       }
     } catch (error) {
+      // Store the error for debugging
+      setLastResponse({
+        data: null,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+      
       toast({
         title: "Error",
         description: "Failed to fetch turtle data",
@@ -59,13 +87,45 @@ const TurtleDetail = () => {
 
   const handleSendCommand = async (command: string) => {
     try {
-      await sendTurtleCommand(turtleId, command);
+      const url = `${apiBaseUrl}/turtle/${turtleId}/command`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ command }),
+      });
+      
+      const responseData = await response.json();
+      
+      // Store the command response for debugging
+      setLastResponse({
+        data: responseData,
+        timestamp: new Date().toISOString(),
+        url: url,
+        command: command
+      });
+      
       // Fetch the latest data right after sending a command
       setTimeout(fetchTurtleData, 500);
       return Promise.resolve();
     } catch (error) {
+      // Store the error for debugging
+      setLastResponse({
+        data: null,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+        command: command
+      });
+      
       return Promise.reject(error);
     }
+  };
+
+  const toggleDebugMode = () => {
+    const newMode = !debugMode;
+    setDebugMode(newMode);
+    localStorage.setItem('debugMode', newMode.toString());
   };
 
   return (
@@ -76,8 +136,27 @@ const TurtleDetail = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Link>
-          <SettingsButton />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggleDebugMode}
+              className={debugMode ? "bg-yellow-100" : ""}
+            >
+              {debugMode ? "Hide Debug" : "Show Debug"}
+            </Button>
+            <SettingsButton />
+          </div>
         </div>
+
+        {debugMode && lastResponse && (
+          <DebugPanel 
+            data={lastResponse} 
+            title={lastResponse.command 
+              ? `Command Response (${lastResponse.timestamp})` 
+              : `API Response (${lastResponse.timestamp})`} 
+          />
+        )}
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">

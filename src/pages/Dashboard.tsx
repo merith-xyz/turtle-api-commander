@@ -7,10 +7,15 @@ import TurtleCard from "@/components/TurtleCard";
 import { useToast } from "@/hooks/use-toast";
 import { useApiSettings } from "@/contexts/ApiSettingsContext";
 import SettingsButton from "@/components/SettingsButton";
+import DebugPanel from "@/components/DebugPanel";
 
 const Dashboard = () => {
   const [turtles, setTurtles] = useState<Turtle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastResponse, setLastResponse] = useState<{data: any, error?: string, timestamp: string} | null>(null);
+  const [debugMode, setDebugMode] = useState<boolean>(() => {
+    return localStorage.getItem('debugMode') === 'true';
+  });
   const { toast } = useToast();
   const { apiBaseUrl } = useApiSettings();
 
@@ -22,15 +27,38 @@ const Dashboard = () => {
   const fetchTurtles = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchAllTurtles();
-      setTurtles(data);
-      if (data.length === 0) {
+      // Record timestamp of the request
+      const timestamp = new Date().toISOString();
+      
+      // Making the API call
+      const url = `${apiBaseUrl}/turtle`;
+      const response = await fetch(url);
+      const responseData = await response.json();
+      
+      // Store the full response for debugging
+      setLastResponse({
+        data: responseData,
+        timestamp: timestamp,
+        url: url
+      });
+      
+      // Update the turtles state with the data
+      setTurtles(responseData);
+      
+      if (responseData.length === 0) {
         toast({
           title: "No turtles found",
           description: "Make sure the turtle API server is running.",
         });
       }
     } catch (error) {
+      // Store the error for debugging
+      setLastResponse({
+        data: null,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+      
       toast({
         title: "Failed to fetch turtles",
         description: "Could not connect to the turtle API.",
@@ -49,6 +77,12 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [apiBaseUrl]); // Re-fetch when API URL changes
 
+  const toggleDebugMode = () => {
+    const newMode = !debugMode;
+    setDebugMode(newMode);
+    localStorage.setItem('debugMode', newMode.toString());
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header onRefresh={fetchTurtles} isLoading={isLoading} />
@@ -56,8 +90,25 @@ const Dashboard = () => {
       <main className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Turtle Dashboard</h1>
-          <SettingsButton />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggleDebugMode}
+              className={debugMode ? "bg-yellow-100" : ""}
+            >
+              {debugMode ? "Hide Debug" : "Show Debug"}
+            </Button>
+            <SettingsButton />
+          </div>
         </div>
+        
+        {debugMode && lastResponse && (
+          <DebugPanel 
+            data={lastResponse} 
+            title={`API Response (${lastResponse.timestamp})`} 
+          />
+        )}
         
         {isLoading && turtles.length === 0 ? (
           <div className="flex justify-center items-center h-64">
