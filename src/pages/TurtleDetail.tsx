@@ -22,9 +22,22 @@ const TurtleDetail = () => {
   const [lastResponse, setLastResponse] = useState<{
     data: any, 
     error?: string, 
+    errorInfo?: {
+      status?: number,
+      statusText?: string,
+      type?: string,
+      stack?: string,
+      code?: string,
+      details?: string
+    },
     timestamp: string, 
     url?: string,
-    command?: string
+    command?: string,
+    requestInfo?: {
+      method: string,
+      headers?: Record<string, string>,
+      body?: string
+    }
   } | null>(null);
   const [debugMode, setDebugMode] = useState<boolean>(() => {
     return localStorage.getItem('debugMode') === 'true';
@@ -45,14 +58,47 @@ const TurtleDetail = () => {
       
       // Making the API call
       const url = `${apiBaseUrl}/turtle/${turtleId}`;
-      const response = await fetch(url);
+      const requestInfo = {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      };
+      
+      const response = await fetch(url, requestInfo);
+      
+      if (!response.ok) {
+        // Handle non-200 responses
+        const errorInfo = {
+          status: response.status,
+          statusText: response.statusText,
+          type: 'HttpError'
+        };
+        
+        let errorData;
+        try {
+          // Try to parse error response as JSON
+          errorData = await response.json();
+        } catch (e) {
+          // If can't parse as JSON, use text
+          errorData = await response.text();
+        }
+        
+        throw {
+          message: `HTTP error ${response.status}: ${response.statusText}`,
+          errorInfo: errorInfo,
+          data: errorData
+        };
+      }
+      
       const responseData = await response.json();
       
       // Store the full response for debugging
       setLastResponse({
         data: responseData,
         timestamp: timestamp,
-        url: url
+        url: url,
+        requestInfo: requestInfo
       });
       
       // Update the turtle state with the data
@@ -66,11 +112,48 @@ const TurtleDetail = () => {
         });
       }
     } catch (error) {
-      // Store the error for debugging
+      // Capture detailed error information
+      const errorInfo: any = {};
+      let errorMessage = '';
+      let errorData = null;
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        errorInfo.type = error.constructor.name;
+        errorInfo.stack = error.stack;
+        
+        // For network errors (like DOMException)
+        if ('code' in error) {
+          errorInfo.code = (error as any).code;
+        }
+      } else if (typeof error === 'object' && error !== null) {
+        // Handle custom error objects we threw above
+        errorMessage = (error as any).message || 'Unknown error';
+        errorInfo = (error as any).errorInfo || {};
+        errorData = (error as any).data;
+      } else {
+        errorMessage = String(error);
+      }
+      
+      // For fetch errors
+      if (errorMessage === 'Failed to fetch') {
+        errorInfo.type = 'NetworkError';
+        errorInfo.details = 'Connection to the server failed. The server might be down or unreachable.';
+      }
+      
+      // Store the detailed error for debugging
       setLastResponse({
-        data: null,
-        error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
+        data: errorData,
+        error: errorMessage,
+        errorInfo: errorInfo,
+        timestamp: new Date().toISOString(),
+        url: `${apiBaseUrl}/turtle/${turtleId}`,
+        requestInfo: {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
       });
       
       toast({
@@ -94,13 +177,40 @@ const TurtleDetail = () => {
   const handleSendCommand = async (command: string) => {
     try {
       const url = `${apiBaseUrl}/turtle/${turtleId}/command`;
-      const response = await fetch(url, {
+      const body = JSON.stringify({ command });
+      const requestInfo = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ command }),
-      });
+        body: body
+      };
+      
+      const response = await fetch(url, requestInfo);
+      
+      if (!response.ok) {
+        // Handle non-200 responses
+        const errorInfo = {
+          status: response.status,
+          statusText: response.statusText,
+          type: 'HttpError'
+        };
+        
+        let errorData;
+        try {
+          // Try to parse error response as JSON
+          errorData = await response.json();
+        } catch (e) {
+          // If can't parse as JSON, use text
+          errorData = await response.text();
+        }
+        
+        throw {
+          message: `HTTP error ${response.status}: ${response.statusText}`,
+          errorInfo: errorInfo,
+          data: errorData
+        };
+      }
       
       const responseData = await response.json();
       
@@ -109,19 +219,58 @@ const TurtleDetail = () => {
         data: responseData,
         timestamp: new Date().toISOString(),
         url: url,
-        command: command
+        command: command,
+        requestInfo: requestInfo
       });
       
       // Fetch the latest data right after sending a command
       setTimeout(fetchTurtleData, 500);
       return Promise.resolve();
     } catch (error) {
+      // Capture detailed error information
+      const errorInfo: any = {};
+      let errorMessage = '';
+      let errorData = null;
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        errorInfo.type = error.constructor.name;
+        errorInfo.stack = error.stack;
+        
+        // For network errors (like DOMException)
+        if ('code' in error) {
+          errorInfo.code = (error as any).code;
+        }
+      } else if (typeof error === 'object' && error !== null) {
+        // Handle custom error objects we threw above
+        errorMessage = (error as any).message || 'Unknown error';
+        errorInfo = (error as any).errorInfo || {};
+        errorData = (error as any).data;
+      } else {
+        errorMessage = String(error);
+      }
+      
+      // For fetch errors
+      if (errorMessage === 'Failed to fetch') {
+        errorInfo.type = 'NetworkError';
+        errorInfo.details = 'Connection to the server failed. The server might be down or unreachable.';
+      }
+      
       // Store the error for debugging
       setLastResponse({
-        data: null,
-        error: error instanceof Error ? error.message : String(error),
+        data: errorData,
+        error: errorMessage,
+        errorInfo: errorInfo,
         timestamp: new Date().toISOString(),
-        command: command
+        command: command,
+        url: `${apiBaseUrl}/turtle/${turtleId}/command`,
+        requestInfo: {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ command })
+        }
       });
       
       return Promise.reject(error);

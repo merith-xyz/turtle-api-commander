@@ -13,7 +13,23 @@ import { Button } from "@/components/ui/button";
 const Dashboard = () => {
   const [turtles, setTurtles] = useState<Turtle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastResponse, setLastResponse] = useState<{data: any, error?: string, timestamp: string, url?: string} | null>(null);
+  const [lastResponse, setLastResponse] = useState<{
+    data: any, 
+    error?: string, 
+    errorInfo?: {
+      status?: number,
+      statusText?: string,
+      type?: string,
+      stack?: string,
+      code?: string
+    },
+    timestamp: string, 
+    url?: string,
+    requestInfo?: {
+      method: string,
+      headers?: Record<string, string>
+    }
+  } | null>(null);
   const [debugMode, setDebugMode] = useState<boolean>(() => {
     return localStorage.getItem('debugMode') === 'true';
   });
@@ -33,14 +49,22 @@ const Dashboard = () => {
       
       // Making the API call
       const url = `${apiBaseUrl}/turtle`;
-      const response = await fetch(url);
+      const requestInfo = {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      };
+      
+      const response = await fetch(url, requestInfo);
       const responseData = await response.json();
       
       // Store the full response for debugging
       setLastResponse({
         data: responseData,
         timestamp: timestamp,
-        url: url
+        url: url,
+        requestInfo: requestInfo
       });
       
       // Update the turtles state with the data
@@ -53,11 +77,38 @@ const Dashboard = () => {
         });
       }
     } catch (error) {
-      // Store the error for debugging
+      // Capture detailed error information
+      const errorInfo: any = {};
+      
+      if (error instanceof Error) {
+        errorInfo.type = error.constructor.name;
+        errorInfo.stack = error.stack;
+        
+        // For network errors (like DOMException)
+        if ('code' in error) {
+          errorInfo.code = (error as any).code;
+        }
+      }
+      
+      // For fetch errors
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        errorInfo.type = 'NetworkError';
+        errorInfo.details = 'Connection to the server failed. The server might be down or unreachable.';
+      }
+      
+      // Store the detailed error for debugging
       setLastResponse({
         data: null,
         error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
+        errorInfo: errorInfo,
+        timestamp: new Date().toISOString(),
+        url: `${apiBaseUrl}/turtle`,
+        requestInfo: {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
       });
       
       toast({
