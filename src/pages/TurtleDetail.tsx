@@ -14,32 +14,40 @@ import CommandPanel from "@/components/CommandPanel";
 import SettingsButton from "@/components/SettingsButton";
 import DebugPanel from "@/components/DebugPanel";
 
+// Define response type to avoid repetition
+type ResponseData = {
+  data: any, 
+  error?: string, 
+  errorInfo?: {
+    status?: number,
+    statusText?: string,
+    type?: string,
+    stack?: string,
+    code?: string,
+    details?: string
+  },
+  timestamp: string, 
+  url?: string,
+  command?: string,
+  requestInfo?: {
+    method: string,
+    headers?: Record<string, string>,
+    body?: string
+  }
+};
+
 const TurtleDetail = () => {
   const { id } = useParams<{ id: string }>();
   const turtleId = parseInt(id || "0");
   const [turtle, setTurtle] = useState<Turtle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
-  const [lastResponse, setLastResponse] = useState<{
-    data: any, 
-    error?: string, 
-    errorInfo?: {
-      status?: number,
-      statusText?: string,
-      type?: string,
-      stack?: string,
-      code?: string,
-      details?: string
-    },
-    timestamp: string, 
-    url?: string,
-    command?: string,
-    requestInfo?: {
-      method: string,
-      headers?: Record<string, string>,
-      body?: string
-    }
-  } | null>(null);
+  
+  // Split debug responses into API and Command responses
+  const [lastApiResponse, setLastApiResponse] = useState<ResponseData | null>(null);
+  const [lastCommandResponse, setLastCommandResponse] = useState<ResponseData | null>(null);
+  const [activeDebugResponse, setActiveDebugResponse] = useState<ResponseData | null>(null);
+  
   const [debugMode, setDebugMode] = useState<boolean>(() => {
     return localStorage.getItem('debugMode') === 'true';
   });
@@ -106,12 +114,15 @@ const TurtleDetail = () => {
       const responseData = await response.json();
       
       // Store the full response for debugging
-      setLastResponse({
+      const apiResponse: ResponseData = {
         data: responseData,
         timestamp: timestamp,
         url: url,
         requestInfo: requestInfo
-      });
+      };
+      
+      setLastApiResponse(apiResponse);
+      setActiveDebugResponse(apiResponse);
       
       // Update the turtle state with the data, preserving the reference if data hasn't changed
       setTurtle(prevTurtle => {
@@ -130,7 +141,7 @@ const TurtleDetail = () => {
       }
     } catch (error) {
       // Capture detailed error information
-      let errorInfo: any = {}; // Changed from const to let
+      let errorInfo: any = {}; 
       let errorMessage = '';
       let errorData = null;
       
@@ -159,7 +170,7 @@ const TurtleDetail = () => {
       }
       
       // Store the detailed error for debugging
-      setLastResponse({
+      const apiErrorResponse: ResponseData = {
         data: errorData,
         error: errorMessage,
         errorInfo: errorInfo,
@@ -171,7 +182,10 @@ const TurtleDetail = () => {
             'Accept': 'application/json'
           }
         }
-      });
+      };
+      
+      setLastApiResponse(apiErrorResponse);
+      setActiveDebugResponse(apiErrorResponse);
       
       // Only show toast on initial load to avoid spamming
       if (isInitialLoad) {
@@ -291,13 +305,16 @@ const TurtleDetail = () => {
       const responseData = await response.json();
       
       // Store the command response for debugging
-      setLastResponse({
+      const commandResponse: ResponseData = {
         data: responseData,
         timestamp: new Date().toISOString(),
         url: url,
         command: command,
         requestInfo: requestInfo
-      });
+      };
+      
+      setLastCommandResponse(commandResponse);
+      setActiveDebugResponse(commandResponse);
       
       // Fetch the latest data right after sending a command
       setTimeout(() => {
@@ -308,7 +325,7 @@ const TurtleDetail = () => {
       return Promise.resolve();
     } catch (error) {
       // Capture detailed error information
-      let errorInfo: any = {}; // Changed from const to let
+      let errorInfo: any = {}; 
       let errorMessage = '';
       let errorData = null;
       
@@ -337,7 +354,7 @@ const TurtleDetail = () => {
       }
       
       // Store the error for debugging
-      setLastResponse({
+      const commandErrorResponse: ResponseData = {
         data: errorData,
         error: errorMessage,
         errorInfo: errorInfo,
@@ -351,7 +368,10 @@ const TurtleDetail = () => {
           },
           body: JSON.stringify({ command })
         }
-      });
+      };
+      
+      setLastCommandResponse(commandErrorResponse);
+      setActiveDebugResponse(commandErrorResponse);
       
       // End interaction state
       userInteracting.current = false;
@@ -392,12 +412,12 @@ const TurtleDetail = () => {
           </div>
         </div>
 
-        {debugMode && lastResponse && (
+        {debugMode && (
           <DebugPanel 
-            data={lastResponse} 
-            title={lastResponse.command 
-              ? `Command Response (${lastResponse.timestamp})` 
-              : `API Response (${lastResponse.timestamp})`} 
+            data={activeDebugResponse || (lastCommandResponse || lastApiResponse)} 
+            title={lastCommandResponse 
+              ? `Command Response (${lastCommandResponse.timestamp})` 
+              : `API Response (${lastApiResponse?.timestamp || ""})`} 
           />
         )}
 
