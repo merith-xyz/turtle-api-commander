@@ -27,21 +27,31 @@ const TurtleDetailLayout = ({
     return (
       <div className="flex flex-col gap-4">
         <TurtleStatus turtle={turtle} />
+        
+        {/* Map/Sight */}
+        <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
+        
+        {/* Command Terminal */}
         <CommandPanel 
           turtleId={turtle.id} 
           onSendCommand={onSendCommand} 
         />
-        <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
+        
+        {/* Inventory */}
         <TurtleInventory 
           inventory={turtle.inventory} 
           selectedSlot={turtle.selectedSlot}
           onSelectSlot={onSelectSlot}
         />
+        
+        {/* Fuel */}
         <TurtleFuel 
-          fuel={turtle.fuel} 
+          fuel={turtle.fuel}
           isCollapsible={true}
           defaultOpen={false} 
         />
+        
+        {/* Info Panel with command results and custom data */}
         <TurtleInfoPanel 
           turtle={turtle}
           onSendCommand={onSendCommand}
@@ -50,31 +60,39 @@ const TurtleDetailLayout = ({
     );
   }
   
-  // Desktop layout is a grid
+  // Desktop layout with two columns
   return (
     <div className="flex flex-col gap-4">
       <TurtleStatus turtle={turtle} />
       <div className="grid grid-cols-12 gap-4">
-        {/* Left side - 8/12 */}
-        <div className="col-span-12 lg:col-span-8 flex flex-col gap-4">
+        {/* Left column - 6/12 */}
+        <div className="col-span-12 lg:col-span-6 flex flex-col gap-4">
+          {/* Map/Sight */}
+          <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
+          
+          {/* Fuel */}
+          <TurtleFuel fuel={turtle.fuel} />
+          
+          {/* Info Panel with command results and custom data */}
+          <TurtleInfoPanel 
+            turtle={turtle}
+            onSendCommand={onSendCommand}
+          />
+        </div>
+        
+        {/* Right column - 6/12 */}
+        <div className="col-span-12 lg:col-span-6 flex flex-col gap-4">
+          {/* Command Terminal */}
           <CommandPanel 
             turtleId={turtle.id} 
             onSendCommand={onSendCommand} 
           />
-          <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
+          
+          {/* Inventory */}
           <TurtleInventory 
             inventory={turtle.inventory} 
             selectedSlot={turtle.selectedSlot}
             onSelectSlot={onSelectSlot}
-          />
-        </div>
-        
-        {/* Right side - 4/12 */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
-          <TurtleFuel fuel={turtle.fuel} />
-          <TurtleInfoPanel 
-            turtle={turtle}
-            onSendCommand={onSendCommand}
           />
         </div>
       </div>
