@@ -66,24 +66,24 @@ const SightBlock = ({
   ) : null;
 
   return (
-    <div className="border border-slate-500 rounded-sm p-3 flex flex-col items-center gap-2 bg-slate-800 shadow-lg relative clip-edge">
-      <div className="flex items-center gap-1 text-sm text-slate-300">
-        <Icon className="h-4 w-4" />
+    <div className="border border-slate-500 rounded-sm p-2 flex flex-col items-center gap-1 bg-slate-800 shadow-lg relative clip-edge">
+      <div className="flex items-center gap-1 text-xs text-slate-300">
+        <Icon className="h-3 w-3" />
         <span>{direction}</span>
       </div>
       {hasData ? (
-        <div className="w-16 h-16 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <MinecraftTexture 
             resourceLocation={getResourcePath()} 
-            size={48}
+            size={40}
             alt={`Block ${blockName?.replace("minecraft:", "")}`}
             isItem={isItem}
             tooltip={tooltipContent}
           />
         </div>
       ) : (
-        <div className="w-16 h-16 flex items-center justify-center bg-slate-700 opacity-25 rounded-sm">
-          <Target className="h-8 w-8 text-slate-500" />
+        <div className="w-10 h-10 flex items-center justify-center rounded-sm">
+          {/* Empty state - just show nothing */}
         </div>
       )}
     </div>
@@ -92,7 +92,7 @@ const SightBlock = ({
 
 const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen = true }: TurtleSightProps) => {
   const sightContent = (
-    <div className="flex flex-row justify-around gap-3">
+    <div className="flex flex-row justify-center gap-2 w-full">
       <SightBlock direction="Up" data={sight.up} icon={ArrowUp} />
       <SightBlock direction="Front" data={sight.front} icon={Target} />
       <SightBlock direction="Down" data={sight.down} icon={ArrowDown} />
@@ -112,7 +112,7 @@ const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen
             <span className="sr-only">Toggle</span>
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent className="p-3">
+        <CollapsibleContent className="p-2">
           {sightContent}
         </CollapsibleContent>
       </Collapsible>
@@ -127,7 +127,7 @@ const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen
           Sight
         </div>
       </div>
-      <div className="p-3">
+      <div className="p-2">
         {sightContent}
       </div>
     </div>

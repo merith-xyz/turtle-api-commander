@@ -53,7 +53,7 @@ const MinecraftTexture = ({
           style={{
             ...dimensions,
             imageRendering: isItem ? "auto" : "pixelated",
-            objectFit: "cover"
+            objectFit: "contain"
           }}
           onError={() => setImgError(true)}
         />
