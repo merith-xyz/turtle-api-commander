@@ -26,6 +26,7 @@ const TurtleDetailLayout = ({
   if (isMobile) {
     return (
       <div className="flex flex-col gap-4">
+        {/* Status */}
         <TurtleStatus turtle={turtle} />
         
         {/* Map/Sight */}
@@ -63,10 +64,12 @@ const TurtleDetailLayout = ({
   // Desktop layout with two columns
   return (
     <div className="flex flex-col gap-4">
-      <TurtleStatus turtle={turtle} />
       <div className="grid grid-cols-12 gap-4">
         {/* Left column - 6/12 */}
         <div className="col-span-12 lg:col-span-6 flex flex-col gap-4">
+          {/* Status - Integrated at the top of left column */}
+          <TurtleStatus turtle={turtle} />
+          
           {/* Map/Sight */}
           <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
           
