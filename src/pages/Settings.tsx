@@ -39,7 +39,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background turtle-bg-pattern">
       <div className="container mx-auto p-4">
         <div className="mb-6">
           <Link to="/" className="inline-flex items-center gap-2 text-primary hover:underline">
@@ -48,15 +48,15 @@ const Settings = () => {
           </Link>
         </div>
         
-        <h1 className="text-2xl font-bold mb-6">Settings</h1>
+        <h1 className="text-2xl font-bold mb-6 text-foreground">Settings</h1>
         
-        <Card className="max-w-2xl mx-auto">
+        <Card className="max-w-2xl mx-auto border-border">
           <CardHeader>
-            <CardTitle>API Configuration</CardTitle>
+            <CardTitle className="text-card-foreground">API Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="apiUrl" className="text-sm font-medium">
+              <label htmlFor="apiUrl" className="text-sm font-medium text-foreground">
                 API Base URL
               </label>
               <Input
