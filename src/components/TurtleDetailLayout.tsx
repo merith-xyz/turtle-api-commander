@@ -27,7 +27,10 @@ const TurtleDetailLayout = ({
     return (
       <div className="flex flex-col gap-4">
         <TurtleStatus turtle={turtle} />
-        <CommandPanel onSendCommand={onSendCommand} />
+        <CommandPanel 
+          turtleId={turtle.id} 
+          onSendCommand={onSendCommand} 
+        />
         <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
         <TurtleInventory 
           inventory={turtle.inventory} 
@@ -54,7 +57,10 @@ const TurtleDetailLayout = ({
       <div className="grid grid-cols-12 gap-4">
         {/* Left side - 8/12 */}
         <div className="col-span-12 lg:col-span-8 flex flex-col gap-4">
-          <CommandPanel onSendCommand={onSendCommand} />
+          <CommandPanel 
+            turtleId={turtle.id} 
+            onSendCommand={onSendCommand} 
+          />
           <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
           <TurtleInventory 
             inventory={turtle.inventory} 
