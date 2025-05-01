@@ -1,16 +1,14 @@
 
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Turtle, isTurtleOffline, TurtleSight as TurtleSightType } from "@/types/turtle";
+import { Turtle, isTurtleOffline } from "@/types/turtle";
 import { Badge } from "@/components/ui/badge";
-import { Terminal, Clock, Battery, Info, Plus, ChevronDown, Eye } from "lucide-react";
+import { Terminal, Clock, Battery, Info, Plus } from "lucide-react";
 import { formatRelative } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useIsMobile } from "@/hooks/use-mobile";
-import TurtleSight from "@/components/TurtleSight";
 import {
   Form,
   FormControl,
@@ -30,6 +28,8 @@ import {
 interface TurtleInfoPanelProps {
   turtle: Turtle;
   onSendCommand: (command: string | string[], isLuaScript?: boolean) => Promise<void>;
+  isCollapsible?: boolean;
+  defaultOpen?: boolean;
 }
 
 type MiscDataType = "string" | "number" | "table";
@@ -40,12 +40,16 @@ interface MiscDataFormValues {
   value: string;
 }
 
-const TurtleInfoPanel = ({ turtle, onSendCommand }: TurtleInfoPanelProps) => {
+const TurtleInfoPanel = ({ 
+  turtle, 
+  onSendCommand, 
+  isCollapsible = false, 
+  defaultOpen = true 
+}: TurtleInfoPanelProps) => {
   const isOffline = isTurtleOffline(turtle);
   const [cmdSuccess, cmdResult] = turtle.cmdResult || [false, null];
   const heartbeatDate = new Date(turtle.heartbeat * 1000);
   const lastSeen = formatRelative(heartbeatDate, new Date());
-  const isMobile = useIsMobile();
   const { toast } = useToast();
   
   // Calculate fuel percentage
@@ -108,8 +112,7 @@ const TurtleInfoPanel = ({ turtle, onSendCommand }: TurtleInfoPanelProps) => {
     } else if (data.type === "number") {
       luaValue = data.value;
     } else {
-      // For tables, format JSON as Lua table 
-      // This is a very basic conversion - complex objects will need better handling
+      // For tables, format JSON as Lua table
       const jsonString = JSON.stringify(valueToSet);
       luaValue = jsonString
         .replace(/{/g, "{")
@@ -155,24 +158,7 @@ const TurtleInfoPanel = ({ turtle, onSendCommand }: TurtleInfoPanelProps) => {
       </div>
 
       <CardContent className="p-0">
-        <Accordion type="multiple" defaultValue={["sight", "fuel", "lastSeen", "cmdResult"]} className="w-full">
-          {/* Turtle Sight Section - Now always visible for both mobile and desktop */}
-          {turtle.sight && (
-            <AccordionItem value="sight" className="border-b border-slate-700">
-              <div className="px-4">
-                <AccordionTrigger className="py-3 hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Sight</span>
-                  </div>
-                </AccordionTrigger>
-              </div>
-              <AccordionContent className="pb-4 px-4">
-                <TurtleSight sight={turtle.sight as TurtleSightType} className="bg-transparent border-0 shadow-none" />
-              </AccordionContent>
-            </AccordionItem>
-          )}
-
+        <Accordion type="multiple" defaultValue={["fuel", "lastSeen", "cmdResult", "customData"]} className="w-full">
           {/* Fuel Status Section */}
           <AccordionItem value="fuel" className="border-b border-slate-700">
             <div className="px-4">
@@ -266,29 +252,76 @@ const TurtleInfoPanel = ({ turtle, onSendCommand }: TurtleInfoPanelProps) => {
             </AccordionItem>
           )}
 
-          {/* Add to ultron.data.misc Section */}
-          <AccordionItem value="addData" className="border-b border-slate-700">
+          {/* Custom Data Section - Combined Add and View */}
+          <AccordionItem value="customData" className="border-b border-slate-700">
             <div className="px-4">
               <AccordionTrigger className="py-3 hover:no-underline">
                 <div className="flex items-center gap-2">
                   <Plus className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Add Custom Data</span>
+                  <span className="text-sm font-medium">Custom Data</span>
                 </div>
               </AccordionTrigger>
             </div>
             <AccordionContent className="pb-4 px-4">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleAddMiscData)} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-4">
+                {/* Add Data Form */}
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleAddMiscData)} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="key"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Key</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="e.g. myData" 
+                                className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm" 
+                                {...field} 
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Type</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm">
+                                  <SelectValue placeholder="Type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-gray-800 border-gray-600 text-gray-200 clip-edge">
+                                <SelectItem value="string">String</SelectItem>
+                                <SelectItem value="number">Number</SelectItem>
+                                <SelectItem value="table">Table (JSON)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     <FormField
                       control={form.control}
-                      name="key"
+                      name="value"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Key</FormLabel>
+                          <FormLabel className="text-xs">Value</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="e.g. myData" 
+                              placeholder={
+                                form.watch("type") === "string" ? "e.g. Hello World" :
+                                form.watch("type") === "number" ? "e.g. 42" :
+                                "e.g. {\"key\":\"value\"}"
+                              } 
                               className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm" 
                               {...field} 
                             />
@@ -296,82 +329,29 @@ const TurtleInfoPanel = ({ turtle, onSendCommand }: TurtleInfoPanelProps) => {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Type</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm">
-                                <SelectValue placeholder="Type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-gray-800 border-gray-600 text-gray-200 clip-edge">
-                              <SelectItem value="string">String</SelectItem>
-                              <SelectItem value="number">Number</SelectItem>
-                              <SelectItem value="table">Table (JSON)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
+                    <Button 
+                      type="submit" 
+                      className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-500 clip-edge-btn"
+                    >
+                      Add to ultron.data.misc
+                    </Button>
+                  </form>
+                </Form>
+                
+                {/* View Data Section */}
+                {Object.keys(turtle.misc).length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">Stored Data:</div>
+                    <div className="bg-muted p-2 rounded-md max-h-48 overflow-y-auto clip-edge-sm">
+                      <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
+                        {JSON.stringify(turtle.misc, null, 2)}
+                      </pre>
+                    </div>
                   </div>
-                  <FormField
-                    control={form.control}
-                    name="value"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Value</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder={
-                              form.watch("type") === "string" ? "e.g. Hello World" :
-                              form.watch("type") === "number" ? "e.g. 42" :
-                              "e.g. {\"key\":\"value\"}"
-                            } 
-                            className="bg-gray-800 border-gray-600 text-gray-200 h-8 text-xs clip-edge-sm" 
-                            {...field} 
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <Button 
-                    type="submit" 
-                    className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-500 clip-edge-btn"
-                  >
-                    Add to ultron.data.misc
-                  </Button>
-                </form>
-              </Form>
+                )}
+              </div>
             </AccordionContent>
           </AccordionItem>
-
-          {/* Misc Data Section */}
-          {Object.keys(turtle.misc).length > 0 && (
-            <AccordionItem value="miscData" className="border-b border-slate-700">
-              <div className="px-4">
-                <AccordionTrigger className="py-3 hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Custom data</span>
-                  </div>
-                </AccordionTrigger>
-              </div>
-              <AccordionContent className="pb-4 px-4">
-                <div className="bg-muted p-2 rounded-md max-h-48 overflow-y-auto clip-edge-sm">
-                  <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
-                    {JSON.stringify(turtle.misc, null, 2)}
-                  </pre>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )}
         </Accordion>
       </CardContent>
     </Card>

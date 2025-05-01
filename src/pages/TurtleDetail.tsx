@@ -12,7 +12,6 @@ import TurtleNotFound from "@/components/TurtleNotFound";
 import TurtleLoading from "@/components/TurtleLoading";
 import DebugPanel from "@/components/DebugPanel";
 import { MapProvider } from "@/contexts/MapContext";
-import WorldMap from "@/components/WorldMap";
 
 const TurtleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -91,20 +90,11 @@ const TurtleDetail = () => {
           {isLoading ? (
             <TurtleLoading />
           ) : turtle ? (
-            <>
-              <TurtleDetailLayout 
-                turtle={turtle} 
-                onSendCommand={sendCommand}
-                onSelectSlot={handleSelectSlot}
-              />
-              <div className="mt-4">
-                <WorldMap 
-                  turtlePosition={turtle.pos}
-                  isCollapsible={true}
-                  defaultOpen={true}
-                />
-              </div>
-            </>
+            <TurtleDetailLayout 
+              turtle={turtle} 
+              onSendCommand={sendCommand}
+              onSelectSlot={handleSelectSlot}
+            />
           ) : (
             <TurtleNotFound turtleId={turtleId} />
           )}

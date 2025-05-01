@@ -2,9 +2,8 @@
 import React from "react";
 import { Turtle } from "@/types/turtle";
 import TurtleInventory from "@/components/TurtleInventory";
-import TurtlePosition from "@/components/TurtlePosition";
+import TurtleLocationCard from "@/components/TurtleLocationCard";
 import TurtleFuel from "@/components/TurtleFuel";
-import TurtleSight from "@/components/TurtleSight";
 import CommandPanel from "@/components/CommandPanel";
 import TurtleStatus from "@/components/TurtleStatus";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -28,38 +27,22 @@ const TurtleDetailLayout = ({
     return (
       <div className="flex flex-col gap-4">
         <TurtleStatus turtle={turtle} />
-        <CommandPanel 
-          onSendCommand={onSendCommand}
+        <CommandPanel onSendCommand={onSendCommand} />
+        <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
+        <TurtleInventory 
+          inventory={turtle.inventory} 
           selectedSlot={turtle.selectedSlot}
+          onSelectSlot={onSelectSlot}
         />
-        <div className="grid grid-cols-1 gap-4">
-          <TurtleInventory 
-            inventory={turtle.inventory} 
-            selectedSlot={turtle.selectedSlot}
-            onSelectSlot={onSelectSlot}
-          />
-          <TurtleFuel 
-            fuel={turtle.fuel} 
-            isCollapsible={true}
-            defaultOpen={false} 
-          />
-          <TurtlePosition 
-            position={turtle.pos} 
-            isCollapsible={true}
-            defaultOpen={false} 
-          />
-          <TurtleSight 
-            sight={turtle.sight} 
-            position={turtle.pos}
-            isCollapsible={true}
-            defaultOpen={false} 
-          />
-          <TurtleInfoPanel 
-            turtle={turtle}
-            isCollapsible={true}
-            defaultOpen={false}
-          />
-        </div>
+        <TurtleFuel 
+          fuel={turtle.fuel} 
+          isCollapsible={true}
+          defaultOpen={false} 
+        />
+        <TurtleInfoPanel 
+          turtle={turtle}
+          onSendCommand={onSendCommand}
+        />
       </div>
     );
   }
@@ -71,10 +54,8 @@ const TurtleDetailLayout = ({
       <div className="grid grid-cols-12 gap-4">
         {/* Left side - 8/12 */}
         <div className="col-span-12 lg:col-span-8 flex flex-col gap-4">
-          <CommandPanel 
-            onSendCommand={onSendCommand}
-            selectedSlot={turtle.selectedSlot}
-          />
+          <CommandPanel onSendCommand={onSendCommand} />
+          <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
           <TurtleInventory 
             inventory={turtle.inventory} 
             selectedSlot={turtle.selectedSlot}
@@ -85,9 +66,10 @@ const TurtleDetailLayout = ({
         {/* Right side - 4/12 */}
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
           <TurtleFuel fuel={turtle.fuel} />
-          <TurtlePosition position={turtle.pos} />
-          <TurtleSight sight={turtle.sight} position={turtle.pos} />
-          <TurtleInfoPanel turtle={turtle} />
+          <TurtleInfoPanel 
+            turtle={turtle}
+            onSendCommand={onSendCommand}
+          />
         </div>
       </div>
     </div>
