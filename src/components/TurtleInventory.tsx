@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TurtleInventoryItem } from "@/types/turtle";
 import { Gamepad2 } from "lucide-react";
@@ -27,7 +28,7 @@ const TurtleInventory = ({
         <span className="text-xs text-muted-foreground">Selected: {selectedSlot}</span>
       </div>
       <div className="p-4">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-3">
           {inventory.map((item, index) => {
             const slotNumber = index + 1; // Minecraft slots are 1-indexed
             const isSelected = slotNumber === selectedSlot;
@@ -37,17 +38,17 @@ const TurtleInventory = ({
                 key={index}
                 onClick={() => onSelectSlot(slotNumber)}
                 className={`
-                  w-16 h-16 border ${isSelected ? 'border-blue-500' : 'border-slate-600'} 
+                  w-20 h-20 border ${isSelected ? 'border-blue-500' : 'border-slate-600'} 
                   flex items-center justify-center relative bg-slate-700 cursor-pointer
                   hover:border-slate-500 transition-colors clip-edge
                 `}
               >
                 {item ? (
-                  <div className="relative flex items-center justify-center w-full h-full p-1">
+                  <div className="relative flex items-center justify-center w-full h-full p-2">
                     <MinecraftTexture
                       resourceLocation={getResourcePath(item.name)}
                       fallback="/placeholder.svg"
-                      size="100%" 
+                      size={48} 
                       alt={simplifyName(item.name)}
                       isItem={isItemByName(item.name)}
                       tooltip={
@@ -57,14 +58,14 @@ const TurtleInventory = ({
                         </div>
                       }
                     />
-                    <div className="absolute bottom-0 right-1 text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    <div className="absolute bottom-1 right-2 text-sm font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                       {item.count > 1 ? item.count : ""}
                     </div>
                   </div>
                 ) : (
                   <span className="text-xs text-slate-500">Empty</span>
                 )}
-                <div className="absolute top-0 left-0 w-4 h-4 flex items-center justify-center text-xs text-slate-400">
+                <div className="absolute top-1 left-1 w-5 h-5 flex items-center justify-center text-xs text-slate-400">
                   {slotNumber}
                 </div>
               </div>

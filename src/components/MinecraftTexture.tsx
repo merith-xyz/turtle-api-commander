@@ -31,9 +31,12 @@ const MinecraftTexture = ({
   const { url, isLoading, error } = useMinecraftTexture(resourceLocation, fallback, isItem);
   const [imgError, setImgError] = useState(false);
   
-  // Size style handling
+  // Size style handling - Convert numerical size to pixels or use directly if string
   const sizeStyle = typeof size === "number" ? `${size}px` : size;
-  const dimensions = { width: "32px", height: "32px" };
+  const dimensions = { 
+    width: sizeStyle, 
+    height: sizeStyle 
+  };
   
   const imageElement = (
     <>
