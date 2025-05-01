@@ -33,9 +33,7 @@ const MinecraftTexture = ({
   
   // Size style handling
   const sizeStyle = typeof size === "number" ? `${size}px` : size;
-  const dimensions = size === "100%" 
-    ? { width: "100%", height: "100%" }
-    : { width: sizeStyle, height: sizeStyle };
+  const dimensions = { width: "32px", height: "32px" };
   
   const imageElement = (
     <>
