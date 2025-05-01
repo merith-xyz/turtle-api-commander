@@ -34,7 +34,7 @@ const MinecraftTexture = ({
   // Size style handling
   const sizeStyle = typeof size === "number" ? `${size}px` : size;
   const dimensions = size === "100%" 
-    ? { width: "100%", height: "100%", objectFit: "contain" as const }
+    ? { width: "100%", height: "100%" }
     : { width: sizeStyle, height: sizeStyle };
   
   const imageElement = (
@@ -62,7 +62,7 @@ const MinecraftTexture = ({
           style={{
             ...dimensions,
             imageRendering: "pixelated",
-            objectFit: "contain"
+            objectFit: "cover"
           }}
           onError={() => setImgError(true)}
         />

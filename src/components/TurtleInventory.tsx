@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TurtleInventoryItem } from "@/types/turtle";
 import { Gamepad2 } from "lucide-react";
@@ -44,13 +43,12 @@ const TurtleInventory = ({
                 `}
               >
                 {item ? (
-                  <div className="relative flex items-center justify-center w-full h-full">
+                  <div className="relative flex items-center justify-center w-full h-full p-1">
                     <MinecraftTexture
                       resourceLocation={getResourcePath(item.name)}
                       fallback="/placeholder.svg"
                       size="100%" 
                       alt={simplifyName(item.name)}
-                      className="max-w-[80%] max-h-[80%]"
                       isItem={isItemByName(item.name)}
                       tooltip={
                         <div className="p-1">
