@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TurtleInventoryItem } from "@/types/turtle";
 import { Gamepad2, Info } from "lucide-react";
@@ -20,7 +19,9 @@ const TurtleInventory = ({
   
   return (
     <div className={`bg-slate-800 border-slate-700 shadow-xl ${className}`}>
+      {/* selected slot */}
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
+        {/* gamepad icon */}
         <div className="flex items-center gap-2">
           <Gamepad2 className="h-4 w-4" />
           <span className="font-medium">Inventory</span>
@@ -28,7 +29,7 @@ const TurtleInventory = ({
         <span className="text-xs text-muted-foreground">Selected: {selectedSlot}</span>
       </div>
       <div className="p-4">
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-1">
           {inventory.map((item, index) => {
             const slotNumber = index + 1; // Minecraft slots are 1-indexed
             const isSelected = slotNumber === selectedSlot;
@@ -38,17 +39,15 @@ const TurtleInventory = ({
                 key={index}
                 onClick={() => onSelectSlot(slotNumber)}
                 className={`
-                  w-20 h-20 border ${isSelected ? 'border-blue-500' : 'border-slate-600'} 
-                  flex items-center justify-center relative bg-slate-700 cursor-pointer
-                  hover:border-slate-500 transition-colors clip-edge
+                  border ${isSelected ? 'border-blue-600' : 'border-slate-600'}
                 `}
               >
                 {item ? (
-                  <div className="relative flex items-center justify-center w-full h-full p-2">
+                  <div className="relative flex items-center justify-center w-full h-full p-1">
                     <MinecraftTexture
                       resourceLocation={getResourcePath(item.name)}
                       fallback="/placeholder.svg"
-                      size={48} 
+                      size={64} 
                       alt={simplifyName(item.name)}
                       isItem={isItemByName(item.name)}
                       hoverCard={

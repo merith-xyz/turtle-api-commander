@@ -62,8 +62,11 @@ const TurtleInfoPanel = ({
     fuelStatus = "Good";
     statusColor = "text-green-500";
   } else if (fuelPercentage > 30) {
-    fuelStatus = "Moderate";
-    statusColor = "text-yellow-500";
+    fuelStatus = "Low";
+    statusColor = "text-red-500";
+  } else {
+    fuelStatus = "Operational";
+    statusColor = "text-white-500";
   }
   
   // Form for adding data to ultron.data.misc

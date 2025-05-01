@@ -26,8 +26,6 @@ const TurtleDetailLayout = ({
   if (isMobile) {
     return (
       <div className="flex flex-col gap-4">
-        {/* Status */}
-        <TurtleStatus turtle={turtle} />
         
         {/* Map/Sight */}
         <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
@@ -45,13 +43,6 @@ const TurtleDetailLayout = ({
           onSelectSlot={onSelectSlot}
         />
         
-        {/* Fuel */}
-        <TurtleFuel 
-          fuel={turtle.fuel}
-          isCollapsible={true}
-          defaultOpen={false} 
-        />
-        
         {/* Info Panel with command results and custom data */}
         <TurtleInfoPanel 
           turtle={turtle}
@@ -67,14 +58,12 @@ const TurtleDetailLayout = ({
       <div className="grid grid-cols-12 gap-4">
         {/* Left column - 6/12 */}
         <div className="col-span-12 lg:col-span-6 flex flex-col gap-4">
-          {/* Status - Integrated at the top of left column */}
-          <TurtleStatus turtle={turtle} />
-          
+
           {/* Map/Sight */}
           <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
-          
-          {/* Fuel */}
-          <TurtleFuel fuel={turtle.fuel} />
+
+          {/* Status - Integrated at the top of left column */}
+          {/* <TurtleStatus turtle={turtle} /> */}
           
           {/* Info Panel with command results and custom data */}
           <TurtleInfoPanel 
