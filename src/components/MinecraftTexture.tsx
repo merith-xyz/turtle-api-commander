@@ -45,16 +45,6 @@ const MinecraftTexture = ({
           className={`clip-edge ${className}`} 
           style={{ width: dimensions.width, height: dimensions.height }} 
         />
-      ) : !resourceLocation ? (
-        <img
-          src={fallback}
-          alt={alt}
-          className={`clip-edge ${className}`}
-          style={{
-            ...dimensions,
-            objectFit: "contain"
-          }}
-        />
       ) : (
         <img
           src={url}
@@ -62,7 +52,7 @@ const MinecraftTexture = ({
           className={`clip-edge ${className} ${error || imgError ? "opacity-50" : ""}`}
           style={{
             ...dimensions,
-            imageRendering: "pixelated",
+            imageRendering: isItem ? "auto" : "pixelated",
             objectFit: "cover"
           }}
           onError={() => setImgError(true)}

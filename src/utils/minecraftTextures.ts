@@ -16,6 +16,8 @@ const MC_RENDER_API = "https://mc-heads.net/item";
  * @returns The full URL to the resource
  */
 export const getMinecraftResourceUrl = (resourceLocation: string): string => {
+  if (!resourceLocation) return "";
+  
   // If it already starts with 'assets', just append the base URL
   if (resourceLocation.startsWith("assets/")) {
     return `${MINECRAFT_ASSETS_BASE_URL}/${resourceLocation}`;
@@ -31,6 +33,7 @@ export const getMinecraftResourceUrl = (resourceLocation: string): string => {
  * @returns The full URL to the block texture
  */
 export const getMinecraftBlockTexture = (blockName: string): string => {
+  if (!blockName) return "";
   return getMinecraftResourceUrl(`textures/block/${blockName}.png`);
 };
 
@@ -40,6 +43,7 @@ export const getMinecraftBlockTexture = (blockName: string): string => {
  * @returns The full URL to the item texture
  */
 export const getMinecraftItemTexture = (itemName: string): string => {
+  if (!itemName) return "";
   return getMinecraftResourceUrl(`textures/item/${itemName}.png`);
 };
 
@@ -49,6 +53,8 @@ export const getMinecraftItemTexture = (itemName: string): string => {
  * @returns The URL to the rendered item model
  */
 export const getMinecraftItemModel = (itemName: string): string => {
+  if (!itemName) return "";
+  
   // Strip the minecraft: prefix if present
   const pureName = itemName.replace("minecraft:", "");
   return `${MC_RENDER_API}/${pureName}`;
@@ -78,42 +84,49 @@ export const useMinecraftTexture = (
     }
 
     setIsLoading(true);
+    setError(false);
     
-    // For items, try to use the 3D model rendering service
-    if (isItem) {
-      // Extract item name for the rendering service
-      const itemName = resourceLocation.split("/").pop()?.replace(".png", "") || "";
-      if (itemName) {
-        const modelUrl = getMinecraftItemModel(itemName);
-        const img = new Image();
-        
-        img.onload = () => {
-          setUrl(modelUrl);
-          setIsLoading(false);
-          setError(false);
-        };
-        
-        img.onerror = () => {
-          // If model fails, fall back to texture assets
-          tryLoadTexture();
-        };
-        
-        img.src = modelUrl;
-        return;
-      }
+    // Extract item/block name from resource location
+    const resourceParts = resourceLocation.split("/");
+    const nameWithExt = resourceParts[resourceParts.length - 1] || "";
+    const itemName = nameWithExt.replace(".png", "");
+    
+    // For items, prioritize using the 3D model rendering service
+    if (isItem && itemName) {
+      const modelUrl = getMinecraftItemModel(itemName);
+      const img = new Image();
+      
+      img.onload = () => {
+        setUrl(modelUrl);
+        setIsLoading(false);
+      };
+      
+      img.onerror = () => {
+        // If model fails, fall back to texture assets
+        tryLoadTexture();
+      };
+      
+      img.src = modelUrl;
+      return;
     }
     
     // For blocks or if item model loading failed, try texture assets
     tryLoadTexture();
     
     function tryLoadTexture() {
+      if (!resourceLocation) {
+        setUrl(fallback);
+        setIsLoading(false);
+        setError(true);
+        return;
+      }
+      
       const textureUrl = getMinecraftResourceUrl(resourceLocation);
       const img = new Image();
       
       img.onload = () => {
         setUrl(textureUrl);
         setIsLoading(false);
-        setError(false);
       };
       
       img.onerror = () => {
@@ -124,10 +137,6 @@ export const useMinecraftTexture = (
       
       img.src = textureUrl;
     }
-    
-    return () => {
-      // Cleanup
-    };
   }, [resourceLocation, fallback, isItem]);
   
   return { url, isLoading, error };

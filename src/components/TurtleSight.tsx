@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TurtleSight as TurtleSightType } from "@/types/turtle";
-import { ArrowUp, ArrowDown, ArrowRight, Eye } from "lucide-react";
+import { ArrowUp, ArrowDown, Target, Eye } from "lucide-react";
 import MinecraftTexture from "@/components/MinecraftTexture";
 import { 
   Collapsible, 
@@ -27,16 +27,14 @@ const SightBlock = ({
   icon: React.ElementType;
 }) => {
   const blockName = data.name as string || "unknown";
-  const simpleName = blockName?.replace("minecraft:", "") || "empty";
-  const hasData = Object.keys(data).length > 0;
+  const hasData = Object.keys(data).length > 0 && blockName;
   
   const getResourcePath = () => {
     if (!hasData) return "";
     
-    // Try to determine if it's an item or a block
     if (blockName?.includes("minecraft:")) {
       const pureName = blockName.replace("minecraft:", "");
-      // Default to block textures, but could be enhanced with better detection
+      // For blocks, use block textures
       return `textures/block/${pureName}.png`;
     }
     return "";
@@ -48,51 +46,55 @@ const SightBlock = ({
      blockName.includes("_sword") || 
      blockName.includes("_axe") || 
      blockName.includes("_shovel") || 
-     blockName.includes("_hoe"));
+     blockName.includes("_hoe") ||
+     blockName.includes("bucket") ||
+     blockName.includes("diamond") ||
+     blockName.includes("emerald") ||
+     blockName.includes("coal") ||
+     blockName.includes("stick") ||
+     blockName.includes("torch") ||
+     blockName.includes("redstone") ||
+     blockName.includes("shulker"));
 
   const tooltipContent = hasData ? (
     <div className="p-1">
-      <p className="font-semibold text-sm">{simpleName}</p>
+      <p className="font-semibold text-sm">{blockName?.replace("minecraft:", "")}</p>
       <pre className="text-xs mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap">
         {JSON.stringify(data, null, 2)}
       </pre>
     </div>
-  ) : (
-    <p>No block detected</p>
-  );
+  ) : null;
 
   return (
-    <div className="border border-slate-500 rounded-sm p-2 flex flex-col items-center gap-2 bg-slate-800 shadow-lg relative clip-edge">
-      <div className="flex items-center gap-1 text-xs text-slate-300">
+    <div className="border border-slate-500 rounded-sm p-3 flex flex-col items-center gap-2 bg-slate-800 shadow-lg relative clip-edge">
+      <div className="flex items-center gap-1 text-sm text-slate-300">
         <Icon className="h-4 w-4" />
         <span>{direction}</span>
       </div>
-      <div className="w-12 h-12 flex items-center justify-center bg-slate-700 rounded-none border border-slate-600 clip-edge">
-        {hasData ? (
-          <div className="relative w-full h-full">
-            <MinecraftTexture 
-              resourceLocation={getResourcePath()} 
-              fallback="/placeholder.svg"
-              size="100%"
-              alt={`Block ${simpleName}`}
-              className="object-cover"
-              isItem={isItem}
-              tooltip={tooltipContent}
-            />
-          </div>
-        ) : (
-          <span className="text-xs text-slate-400">Empty</span>
-        )}
-      </div>
+      {hasData ? (
+        <div className="w-16 h-16 flex items-center justify-center">
+          <MinecraftTexture 
+            resourceLocation={getResourcePath()} 
+            size={48}
+            alt={`Block ${blockName?.replace("minecraft:", "")}`}
+            isItem={isItem}
+            tooltip={tooltipContent}
+          />
+        </div>
+      ) : (
+        <div className="w-16 h-16 flex items-center justify-center bg-slate-700 opacity-25 rounded-sm">
+          <Target className="h-8 w-8 text-slate-500" />
+        </div>
+      )}
     </div>
   );
 };
 
 const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen = true }: TurtleSightProps) => {
   const sightContent = (
-    <div className="flex flex-row justify-around gap-2">
+    <div className="flex flex-row justify-around gap-3">
       <SightBlock direction="Up" data={sight.up} icon={ArrowUp} />
-      <SightBlock direction="Front" data={sight.front} icon={ArrowRight} />
+      <SightBlock direction="Front" data={sight.front} icon={Target} />
       <SightBlock direction="Down" data={sight.down} icon={ArrowDown} />
     </div>
   );
@@ -110,7 +112,7 @@ const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen
             <span className="sr-only">Toggle</span>
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent className="p-2">
+        <CollapsibleContent className="p-3">
           {sightContent}
         </CollapsibleContent>
       </Collapsible>
@@ -125,7 +127,7 @@ const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen
           Sight
         </div>
       </div>
-      <div className="p-2">
+      <div className="p-3">
         {sightContent}
       </div>
     </div>
