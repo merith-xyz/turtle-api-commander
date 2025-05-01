@@ -44,13 +44,13 @@ const TurtleInventory = ({
                 `}
               >
                 {item ? (
-                  <div className="relative w-full h-full">
+                  <div className="relative flex items-center justify-center w-full h-full">
                     <MinecraftTexture
                       resourceLocation={getResourcePath(item.name)}
                       fallback="/placeholder.svg"
-                      size="80%"
+                      size="100%" 
                       alt={simplifyName(item.name)}
-                      className="object-cover"
+                      className="max-w-[80%] max-h-[80%]"
                       isItem={isItemByName(item.name)}
                       tooltip={
                         <div className="p-1">

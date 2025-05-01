@@ -31,20 +31,27 @@ const MinecraftTexture = ({
   const { url, isLoading, error } = useMinecraftTexture(resourceLocation, fallback, isItem);
   const [imgError, setImgError] = useState(false);
   
+  // Size style handling
   const sizeStyle = typeof size === "number" ? `${size}px` : size;
+  const dimensions = size === "100%" 
+    ? { width: "100%", height: "100%", objectFit: "contain" as const }
+    : { width: sizeStyle, height: sizeStyle };
   
   const imageElement = (
     <>
       {isLoading ? (
-        <Skeleton className={`clip-edge ${className}`} style={{ width: sizeStyle, height: sizeStyle }} />
+        <Skeleton 
+          className={`clip-edge ${className}`} 
+          style={{ width: dimensions.width, height: dimensions.height }} 
+        />
       ) : !resourceLocation ? (
         <img
           src={fallback}
           alt={alt}
           className={`clip-edge ${className}`}
           style={{
-            width: sizeStyle,
-            height: sizeStyle,
+            ...dimensions,
+            objectFit: "contain"
           }}
         />
       ) : (
@@ -53,9 +60,9 @@ const MinecraftTexture = ({
           alt={alt}
           className={`clip-edge ${className} ${error || imgError ? "opacity-50" : ""}`}
           style={{
-            width: sizeStyle,
-            height: sizeStyle,
+            ...dimensions,
             imageRendering: "pixelated",
+            objectFit: "contain"
           }}
           onError={() => setImgError(true)}
         />
