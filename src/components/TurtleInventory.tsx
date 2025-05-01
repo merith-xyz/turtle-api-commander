@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TurtleInventoryItem } from "@/types/turtle";
-import { Gamepad2 } from "lucide-react";
+import { Gamepad2, Info } from "lucide-react";
 import MinecraftTexture from "@/components/MinecraftTexture";
 
 interface TurtleInventoryProps {
@@ -51,10 +51,69 @@ const TurtleInventory = ({
                       size={48} 
                       alt={simplifyName(item.name)}
                       isItem={isItemByName(item.name)}
-                      tooltip={
-                        <div className="p-1">
-                          <p className="font-semibold text-sm">{simplifyName(item.name)}</p>
-                          <p className="text-xs mt-1">Count: {item.count}</p>
+                      hoverCard={
+                        <div>
+                          <div className="bg-slate-700 p-3 border-b border-slate-600 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Info className="h-4 w-4" />
+                              <span className="font-semibold">{simplifyName(item.name)}</span>
+                            </div>
+                            <span className="text-xs bg-slate-600 px-2 py-1 rounded-sm">
+                              {item.count} / {item.maxCount || '64'}
+                            </span>
+                          </div>
+                          <div className="p-3 text-sm">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="font-medium">Name:</div>
+                              <div className="text-slate-300 break-all">{item.name}</div>
+                              
+                              {item.displayName && (
+                                <>
+                                  <div className="font-medium">Display:</div>
+                                  <div className="text-slate-300 break-all">{item.displayName}</div>
+                                </>
+                              )}
+                              
+                              {item.maxCount && (
+                                <>
+                                  <div className="font-medium">Stack Size:</div>
+                                  <div className="text-slate-300">{item.maxCount}</div>
+                                </>
+                              )}
+                            </div>
+                            
+                            {item.itemGroups && item.itemGroups.length > 0 && (
+                              <div className="mt-3">
+                                <div className="font-medium mb-1">Item Groups:</div>
+                                <div className="flex flex-wrap gap-1">
+                                  {item.itemGroups.map((group, idx) => (
+                                    <span 
+                                      key={idx} 
+                                      className="bg-slate-600 px-2 py-0.5 text-xs rounded-sm"
+                                    >
+                                      {group.displayName || group.id}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {item.tags && Object.keys(item.tags).length > 0 && (
+                              <div className="mt-3">
+                                <div className="font-medium mb-1">Tags:</div>
+                                <div className="flex flex-wrap gap-1">
+                                  {Object.keys(item.tags).map((tag) => (
+                                    <span 
+                                      key={tag} 
+                                      className="bg-slate-600 px-2 py-0.5 text-xs rounded-sm"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       }
                     />

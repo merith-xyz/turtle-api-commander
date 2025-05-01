@@ -8,6 +8,11 @@ import {
   TooltipProvider,
   TooltipTrigger 
 } from "@/components/ui/tooltip";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from "@/components/ui/hover-card";
 
 interface MinecraftTextureProps {
   resourceLocation: string;
@@ -16,6 +21,7 @@ interface MinecraftTextureProps {
   size?: number | string;
   alt?: string;
   tooltip?: string | React.ReactNode;
+  hoverCard?: React.ReactNode;
   isItem?: boolean;
 }
 
@@ -26,6 +32,7 @@ const MinecraftTexture = ({
   size = 32,
   alt = "Minecraft texture",
   tooltip,
+  hoverCard,
   isItem = false
 }: MinecraftTextureProps) => {
   const { url, isLoading, error } = useMinecraftTexture(resourceLocation, fallback, isItem);
@@ -60,6 +67,22 @@ const MinecraftTexture = ({
       )}
     </>
   );
+  
+  // If hoverCard is provided, wrap in HoverCard component
+  if (hoverCard) {
+    return (
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <div className="inline-block cursor-help">
+            {imageElement}
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="clip-edge border-slate-700 bg-slate-800 text-slate-200 shadow-lg p-0 w-80">
+          {hoverCard}
+        </HoverCardContent>
+      </HoverCard>
+    );
+  }
   
   // If tooltip is provided, wrap in tooltip component
   if (tooltip) {
