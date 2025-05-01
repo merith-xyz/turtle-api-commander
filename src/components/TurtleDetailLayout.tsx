@@ -1,83 +1,94 @@
 
 import React from "react";
 import { Turtle } from "@/types/turtle";
+import TurtleInventory from "@/components/TurtleInventory";
+import TurtlePosition from "@/components/TurtlePosition";
+import TurtleFuel from "@/components/TurtleFuel";
+import TurtleSight from "@/components/TurtleSight";
+import CommandPanel from "@/components/CommandPanel";
+import TurtleStatus from "@/components/TurtleStatus";
 import { useIsMobile } from "@/hooks/use-mobile";
 import TurtleInfoPanel from "@/components/TurtleInfoPanel";
-import CommandPanel from "@/components/CommandPanel";
-import TurtleInventory from "@/components/TurtleInventory";
 
 interface TurtleDetailLayoutProps {
   turtle: Turtle;
-  onSendCommand: (command: string | string[], isLuaScript?: boolean) => Promise<void>;
+  onSendCommand: (command: string) => Promise<void>;
   onSelectSlot: (slot: number) => void;
 }
 
-const TurtleDetailLayout = ({ 
-  turtle, 
-  onSendCommand, 
-  onSelectSlot 
+const TurtleDetailLayout = ({
+  turtle,
+  onSendCommand,
+  onSelectSlot
 }: TurtleDetailLayoutProps) => {
   const isMobile = useIsMobile();
-
+  
+  // Mobile layout is a stack
   if (isMobile) {
     return (
-      // Mobile layout - Single column
       <div className="flex flex-col gap-4">
-        {/* Info Panel with integrated Sight */}
-        <div className="flex-1">
-          <TurtleInfoPanel 
-            turtle={turtle} 
-            onSendCommand={onSendCommand} 
-          />
-        </div>
-        
-        {/* Command Panel */}
+        <TurtleStatus turtle={turtle} />
         <CommandPanel 
-          turtleId={turtle.id} 
-          onSendCommand={onSendCommand} 
-          className="clip-edge"
+          onSendCommand={onSendCommand}
+          selectedSlot={turtle.selectedSlot}
         />
-        
-        {/* Inventory */}
-        {turtle.inventory && (
+        <div className="grid grid-cols-1 gap-4">
           <TurtleInventory 
             inventory={turtle.inventory} 
-            selectedSlot={turtle.selectedSlot} 
+            selectedSlot={turtle.selectedSlot}
             onSelectSlot={onSelectSlot}
-            className="clip-edge"
           />
-        )}
+          <TurtleFuel 
+            fuel={turtle.fuel} 
+            isCollapsible={true}
+            defaultOpen={false} 
+          />
+          <TurtlePosition 
+            position={turtle.pos} 
+            isCollapsible={true}
+            defaultOpen={false} 
+          />
+          <TurtleSight 
+            sight={turtle.sight} 
+            position={turtle.pos}
+            isCollapsible={true}
+            defaultOpen={false} 
+          />
+          <TurtleInfoPanel 
+            turtle={turtle}
+            isCollapsible={true}
+            defaultOpen={false}
+          />
+        </div>
       </div>
     );
   }
-
+  
+  // Desktop layout is a grid
   return (
-    // Desktop layout - Now with 2 columns since sight is moved inside info panel
-    <div className="grid grid-cols-6 gap-4">
-      {/* Left Column - Info Panel (now with Sight inside) */}
-      <div className="col-span-2">
-        <TurtleInfoPanel 
-          turtle={turtle} 
-          onSendCommand={onSendCommand} 
-        />
-      </div>
-      
-      {/* Right Column - Command Panel & Inventory */}
-      <div className="col-span-4 flex flex-col gap-4">
-        <CommandPanel 
-          turtleId={turtle.id} 
-          onSendCommand={onSendCommand}
-          className="w-full clip-edge" 
-        />
-        
-        {turtle.inventory && (
+    <div className="flex flex-col gap-4">
+      <TurtleStatus turtle={turtle} />
+      <div className="grid grid-cols-12 gap-4">
+        {/* Left side - 8/12 */}
+        <div className="col-span-12 lg:col-span-8 flex flex-col gap-4">
+          <CommandPanel 
+            onSendCommand={onSendCommand}
+            selectedSlot={turtle.selectedSlot}
+          />
           <TurtleInventory 
             inventory={turtle.inventory} 
-            selectedSlot={turtle.selectedSlot} 
+            selectedSlot={turtle.selectedSlot}
             onSelectSlot={onSelectSlot}
-            className="w-full clip-edge"
           />
-        )}
+        </div>
+        
+        {/* Right side - 4/12 */}
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+          <TurtleFuel fuel={turtle.fuel} />
+          <TurtlePosition position={turtle.pos} />
+          <TurtleSight sight={turtle.sight} position={turtle.pos} />
+          <TurtleInfoPanel turtle={turtle} />
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,8 @@ import TurtleDetailLayout from "@/components/TurtleDetailLayout";
 import TurtleNotFound from "@/components/TurtleNotFound";
 import TurtleLoading from "@/components/TurtleLoading";
 import DebugPanel from "@/components/DebugPanel";
+import { MapProvider } from "@/contexts/MapContext";
+import WorldMap from "@/components/WorldMap";
 
 const TurtleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -66,38 +68,49 @@ const TurtleDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 turtle-bg-pattern">
-      <div className="container mx-auto p-4">
-        <TurtleHeader 
-          turtle={turtle}
-          onToggleDebug={toggleDebugMode}
-          onRefresh={handleManualRefresh}
-          isLoading={isLoading}
-          isBackgroundLoading={isBackgroundLoading}
-          debugMode={debugMode}
-        />
-
-        {debugMode && (
-          <DebugPanel 
-            apiResponse={lastApiResponse}
-            commandResponse={lastCommandResponse}
-            title="Debug Information"
+    <MapProvider>
+      <div className="min-h-screen bg-gray-900 text-gray-100 turtle-bg-pattern">
+        <div className="container mx-auto p-4">
+          <TurtleHeader 
+            turtle={turtle}
+            onToggleDebug={toggleDebugMode}
+            onRefresh={handleManualRefresh}
+            isLoading={isLoading}
+            isBackgroundLoading={isBackgroundLoading}
+            debugMode={debugMode}
           />
-        )}
 
-        {isLoading ? (
-          <TurtleLoading />
-        ) : turtle ? (
-          <TurtleDetailLayout 
-            turtle={turtle} 
-            onSendCommand={sendCommand}
-            onSelectSlot={handleSelectSlot}
-          />
-        ) : (
-          <TurtleNotFound turtleId={turtleId} />
-        )}
+          {debugMode && (
+            <DebugPanel 
+              apiResponse={lastApiResponse}
+              commandResponse={lastCommandResponse}
+              title="Debug Information"
+            />
+          )}
+
+          {isLoading ? (
+            <TurtleLoading />
+          ) : turtle ? (
+            <>
+              <TurtleDetailLayout 
+                turtle={turtle} 
+                onSendCommand={sendCommand}
+                onSelectSlot={handleSelectSlot}
+              />
+              <div className="mt-4">
+                <WorldMap 
+                  turtlePosition={turtle.pos}
+                  isCollapsible={true}
+                  defaultOpen={true}
+                />
+              </div>
+            </>
+          ) : (
+            <TurtleNotFound turtleId={turtleId} />
+          )}
+        </div>
       </div>
-    </div>
+    </MapProvider>
   );
 };
 

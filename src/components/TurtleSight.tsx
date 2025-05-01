@@ -1,6 +1,6 @@
 
-import React from "react";
-import { TurtleSight as TurtleSightType } from "@/types/turtle";
+import React, { useEffect } from "react";
+import { TurtleSight as TurtleSightType, TurtlePosition } from "@/types/turtle";
 import { ArrowUp, ArrowDown, Target, Eye } from "lucide-react";
 import MinecraftTexture from "@/components/MinecraftTexture";
 import { 
@@ -9,9 +9,11 @@ import {
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { useMap } from "@/contexts/MapContext";
 
 interface TurtleSightProps {
   sight: TurtleSightType;
+  position: TurtlePosition;
   className?: string;
   isCollapsible?: boolean;
   defaultOpen?: boolean;
@@ -90,7 +92,17 @@ const SightBlock = ({
   );
 };
 
-const TurtleSight = ({ sight, className = "", isCollapsible = false, defaultOpen = true }: TurtleSightProps) => {
+const TurtleSight = ({ sight, position, className = "", isCollapsible = false, defaultOpen = true }: TurtleSightProps) => {
+  const { addBlocksFromSight } = useMap();
+  
+  // Update the map when sight changes
+  useEffect(() => {
+    // Only add to map if we have position and sight data
+    if (position && sight) {
+      addBlocksFromSight(sight, position);
+    }
+  }, [sight, position, addBlocksFromSight]);
+  
   const sightContent = (
     <div className="flex flex-row justify-center gap-2 w-full">
       <SightBlock direction="Up" data={sight.up} icon={ArrowUp} />
