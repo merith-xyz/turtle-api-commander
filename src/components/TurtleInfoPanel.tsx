@@ -29,7 +29,16 @@ const TurtleInfoPanel = ({
   defaultOpen = true 
 }: TurtleInfoPanelProps) => {
   const isOffline = isTurtleOffline(turtle);
-  const [cmdSuccess, cmdResult] = turtle.cmdResult || [false, null];
+  
+  // Safely extract command result values with defaults
+  const cmdSuccess = Array.isArray(turtle.cmdResult) && turtle.cmdResult.length > 0 
+    ? Boolean(turtle.cmdResult[0]) 
+    : false;
+    
+  const cmdResult = Array.isArray(turtle.cmdResult) && turtle.cmdResult.length > 1 
+    ? turtle.cmdResult[1]
+    : null;
+    
   const heartbeatDate = new Date(turtle.heartbeat * 1000);
   const lastSeen = formatRelative(heartbeatDate, new Date());
   
@@ -110,7 +119,7 @@ const TurtleInfoPanel = ({
           </AccordionItem>
 
           {/* Command Queue Section */}
-          {turtle.cmdQueue.length > 0 && (
+          {turtle.cmdQueue && Array.isArray(turtle.cmdQueue) && turtle.cmdQueue.length > 0 && (
             <AccordionItem value="cmdQueue" className="border-b border-slate-700">
               <div className="px-4">
                 <AccordionTrigger className="py-3 hover:no-underline">
@@ -138,7 +147,7 @@ const TurtleInfoPanel = ({
             </div>
             <AccordionContent className="pb-4 px-4">
               <CustomDataPanel 
-                miscData={turtle.misc} 
+                miscData={turtle.misc || {}} 
                 onAddData={handleAddMiscData} 
               />
             </AccordionContent>

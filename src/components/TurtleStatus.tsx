@@ -5,6 +5,8 @@ import { Turtle, isTurtleOffline } from "@/types/turtle";
 import { Badge } from "@/components/ui/badge";
 import { Terminal, Clock, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import CommandResultDisplay from "@/components/CommandResultDisplay";
+import CommandQueueDisplay from "@/components/CommandQueueDisplay";
 
 interface TurtleStatusProps {
   turtle: Turtle;
@@ -12,7 +14,16 @@ interface TurtleStatusProps {
 
 const TurtleStatus = ({ turtle }: TurtleStatusProps) => {
   const isOffline = isTurtleOffline(turtle);
-  const [cmdSuccess, cmdResult] = turtle.cmdResult || [false, null];
+  
+  // Safely extract command result values with defaults
+  const cmdSuccess = Array.isArray(turtle.cmdResult) && turtle.cmdResult.length > 0 
+    ? Boolean(turtle.cmdResult[0]) 
+    : false;
+    
+  const cmdResult = Array.isArray(turtle.cmdResult) && turtle.cmdResult.length > 1 
+    ? turtle.cmdResult[1]
+    : null;
+    
   const heartbeatDate = new Date(turtle.heartbeat * 1000);
   const lastSeen = formatDistanceToNow(heartbeatDate, { addSuffix: true });
   
@@ -46,41 +57,20 @@ const TurtleStatus = ({ turtle }: TurtleStatusProps) => {
             <Terminal className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Last command result</span>
           </div>
-          <div className="bg-muted p-2 rounded-md">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant={cmdSuccess ? "outline" : "destructive"} className={cmdSuccess ? "border-green-500 text-green-500" : ""}>
-                {cmdSuccess ? "Success" : "Failed"}
-              </Badge>
-            </div>
-            <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
-              {cmdResult !== null && cmdResult !== undefined
-                ? typeof cmdResult === "object"
-                  ? JSON.stringify(cmdResult, null, 2)
-                  : String(cmdResult)
-                : "No result"}
-            </pre>
-          </div>
+          <CommandResultDisplay success={cmdSuccess} result={cmdResult} />
         </div>
 
-        {turtle.cmdQueue.length > 0 && (
+        {turtle.cmdQueue && Array.isArray(turtle.cmdQueue) && turtle.cmdQueue.length > 0 && (
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Terminal className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Command queue</span>
             </div>
-            <div className="bg-muted p-2 rounded-md max-h-32 overflow-y-auto">
-              <ul className="text-xs space-y-1">
-                {turtle.cmdQueue.map((cmd, idx) => (
-                  <li key={idx} className="font-mono">
-                    {idx + 1}. {cmd}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <CommandQueueDisplay commands={turtle.cmdQueue} />
           </div>
         )}
 
-        {Object.keys(turtle.misc).length > 0 && (
+        {turtle.misc && Object.keys(turtle.misc).length > 0 && (
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Terminal className="h-4 w-4 text-muted-foreground" />

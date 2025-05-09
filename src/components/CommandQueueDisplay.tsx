@@ -2,11 +2,14 @@
 import React from "react";
 
 interface CommandQueueDisplayProps {
-  commands: string[];
+  commands: string[] | null | undefined;
 }
 
 const CommandQueueDisplay = ({ commands }: CommandQueueDisplayProps) => {
-  if (commands.length === 0) return null;
+  // Make sure commands exists and is an array before rendering
+  if (!commands || !Array.isArray(commands) || commands.length === 0) {
+    return null;
+  }
   
   return (
     <div className="bg-muted p-2 rounded-md max-h-32 overflow-y-auto clip-edge-sm">
