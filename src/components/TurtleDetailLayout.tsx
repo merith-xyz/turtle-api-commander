@@ -26,15 +26,26 @@ const TurtleDetailLayout = ({
   if (isMobile) {
     return (
       <div className="flex flex-col gap-4">
-        
         {/* Map/Sight */}
         <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
+        
+        {/* Status - Added at top for mobile */}
+        <TurtleStatus turtle={turtle} />
         
         {/* Command Terminal */}
         <CommandPanel 
           turtleId={turtle.id} 
           onSendCommand={onSendCommand} 
         />
+        
+        {/* Fuel display */}
+        {turtle.fuel && (
+          <TurtleFuel 
+            fuel={turtle.fuel}
+            isCollapsible={true}
+            defaultOpen={false}
+          />
+        )}
         
         {/* Inventory */}
         <TurtleInventory 
@@ -52,18 +63,25 @@ const TurtleDetailLayout = ({
     );
   }
   
-  // Desktop layout with two columns
+  // Desktop layout with adjusted column ratio (40/60)
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-12 gap-4">
-        {/* Left column - 6/12 */}
-        <div className="col-span-12 lg:col-span-6 flex flex-col gap-4">
-
+        {/* Left column - 5/12 (previously 6/12) */}
+        <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
           {/* Map/Sight */}
           <TurtleLocationCard position={turtle.pos} sight={turtle.sight} />
 
           {/* Status - Integrated at the top of left column */}
-          {/* <TurtleStatus turtle={turtle} /> */}
+          <TurtleStatus turtle={turtle} />
+          
+          {/* Fuel display */}
+          {turtle.fuel && (
+            <TurtleFuel 
+              fuel={turtle.fuel}
+              isCollapsible={false}
+            />
+          )}
           
           {/* Info Panel with command results and custom data */}
           <TurtleInfoPanel 
@@ -72,8 +90,8 @@ const TurtleDetailLayout = ({
           />
         </div>
         
-        {/* Right column - 6/12 */}
-        <div className="col-span-12 lg:col-span-6 flex flex-col gap-4">
+        {/* Right column - 7/12 (previously 6/12) */}
+        <div className="col-span-12 lg:col-span-7 flex flex-col gap-4">
           {/* Command Terminal */}
           <CommandPanel 
             turtleId={turtle.id} 
